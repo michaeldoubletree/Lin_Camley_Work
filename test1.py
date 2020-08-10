@@ -66,6 +66,8 @@ euler_r(t0, r_x0, h, tmax, r_ylist, theta_list, funcy_r) # y-coordinates
 # PLOT RESULTS #
 #########################################################
 
+# Plots Theta values
+
 plt.plot(t, theta_list, 'g')
 plt.xlabel('Time (Seconds)')
 plt.ylabel('Angle (Radians)')
@@ -73,6 +75,7 @@ plt.title('Angle v. Time')
 
 plt.show()
 
+# Plots individual x and y positions with respect to time
 plt.figure()
 
 plt.subplot(211)
@@ -88,5 +91,14 @@ plt.xlabel('Time (Seconds)')
 plt.ylabel('Position (???)')
 plt.title('Y-Position v. Time')
 plt.tight_layout()
+
+plt.show()
+
+# Plots both positions at the same time to identify overall position
+
+plt.plot(r_xlist, r_ylist, 'b')
+plt.xlabel('X-Position')
+plt.ylabel('Y-Position')
+plt.title('Overall Position of Particle')
 
 plt.show()
