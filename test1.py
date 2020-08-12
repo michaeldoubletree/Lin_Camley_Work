@@ -116,8 +116,7 @@ for i in range(len(r_xlist)):
 
 msd = msd / len(r_xlist)
 
-num = len(r_xlist)
-expecmsd = 2 * (v0**2 / dTheta**2) * (math.exp(-dTheta * num) + dTheta * num - 1)
+expecmsd = 2 * (v0**2 / dTheta**2) * (math.exp(-dTheta * (tmax-h)) + dTheta * (tmax-h) - 1)
 print('Expected MSD: ')
 print(expecmsd)
 print('Calculated MSD: ')
