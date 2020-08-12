@@ -6,9 +6,8 @@ from scipy.integrate import odeint
 # Python Code to find approximation of a ordinary differential equation 
 # using euler method. 
 
-
+dTheta = 1
 def func_theta(): # differential equation for theta
-    dTheta = 1
     return (math.sqrt(2 * dTheta) * np.random.randn())
 
 v0 = 1
@@ -26,7 +25,7 @@ def euler_theta( x0, y, h, x, l1, fun):
         y = y + h * fun()
         x0 = x0 + h 
 
-# Function for euler formula; adjusted to find the position
+# Function for euler formula; adjusted to find the position since it requires theta
 def euler_r( x0, y, h, x, l1, supp_l, fun): 
     # Iterating till the point at which we 
     # need approximation 
@@ -60,7 +59,7 @@ r_xlist = [ ] # list of all x-coordinates of position
 r_ylist = [ ] # list of all x-coordinates of position
 
 euler_r(t0, r_x0, h, tmax, r_xlist, theta_list, funcx_r) # x-coordinates
-euler_r(t0, r_x0, h, tmax, r_ylist, theta_list, funcy_r) # y-coordinates
+euler_r(t0, r_y0, h, tmax, r_ylist, theta_list, funcy_r) # y-coordinates
 
 #########################################################
 # PLOT RESULTS #
@@ -102,3 +101,24 @@ plt.ylabel('Y-Position')
 plt.title('Overall Position of Particle')
 
 plt.show()
+
+# FINDING MEAN SQUARED DISPLACEMENT #
+msd = 0
+initX = r_xlist[0]
+initY = r_ylist[0]
+
+for i in range(len(r_xlist)):
+    diffx = r_xlist[i] - initX
+    diffy = r_ylist[i] - initY
+    difflen = math.sqrt(diffx**2 + diffy**2)
+    temp = difflen**2
+    msd = msd + temp
+
+msd = msd / len(r_xlist)
+
+num = len(r_xlist)
+expecmsd = 2 * (v0**2 / dTheta**2) * (math.exp(-dTheta * num) + dTheta * num - 1)
+print('Expected MSD: ')
+print(expecmsd)
+print('Calculated MSD: ')
+print(msd)
