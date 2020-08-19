@@ -20,7 +20,7 @@ def funcy_r(theta): # differential equation for y-component of position
 def euler_theta( x0, y, h, x, l1, fun): 
     # Iterating till the point at which we 
     # need approximation 
-    while x0 <= x: # Change naming
+    while x0 < x: # Change naming
         l1.append(y)
         y = y + math.sqrt(h) * fun()
         x0 = x0 + h 
@@ -29,7 +29,7 @@ def euler_theta( x0, y, h, x, l1, fun):
 def euler_r( x0, y, h, x, l1, supp_l, fun): 
     # Iterating till the point at which we 
     # need approximation 
-    while x0 <= x:
+    while x0 < x:
         temp_element = int(x0 / h)
         temp_theta = supp_l[temp_element]
         l1.append(y)
@@ -38,7 +38,7 @@ def euler_r( x0, y, h, x, l1, supp_l, fun):
 
 n = 10 # number of times that program will iterate
 h = 0.05 # timestep
-tmax = 10 # endpoint t - h 
+tmax = 10.05 # endpoint t - h 
 colnum = int(tmax / h)
 all_r = [ ([0] * colnum) for l in range(n)] # lists both x and y coordinates
 
@@ -50,7 +50,7 @@ for i in range(0, n):
     t0 = 0 # initial time
     theta0 = 0 # initial theta
     theta_list = [ ] # list of all thetas
-    t = np.linspace(0, 10, 200)
+    t = np.linspace(0, 10, 201)
 
     euler_theta(t0, theta0, h, tmax, theta_list, func_theta) # stored in theta_list
 
@@ -75,7 +75,7 @@ for i in range(0, n):
     plt.plot(t, theta_list, 'g')
     plt.xlabel('Time (Seconds)')
     plt.ylabel('Angle (Radians)')
-    plt.title('Angle v. Time')
+    plt.title('Angle v. Time: Trial ' + str((i+1)))
 
     plt.show()
 
@@ -86,14 +86,14 @@ for i in range(0, n):
     plt.plot(t, r_xlist, 'g')
     plt.xlabel('Time (Seconds)')
     plt.ylabel('Position (???)')
-    plt.title('X-Position v. Time')
+    plt.title('X-Position v. Time: Trial ' + str((i+1)))
     plt.tight_layout()
 
     plt.subplot(212)
     plt.plot(t, r_ylist, 'g')
     plt.xlabel('Time (Seconds)')
     plt.ylabel('Position (???)')
-    plt.title('Y-Position v. Time')
+    plt.title('Y-Position v. Time: Trial ' + str((i+1)))
     plt.tight_layout()
 
     plt.show()
@@ -103,7 +103,7 @@ for i in range(0, n):
     plt.plot(r_xlist, r_ylist, 'b')
     plt.xlabel('X-Position')
     plt.ylabel('Y-Position')
-    plt.title('Overall Position of Particle')
+    plt.title('Overall Position of Particle: Trial ' + str((i+1)))
 
     plt.show()
 
@@ -113,34 +113,49 @@ for i in range(0, n):
     # X-coordinates are in first element, y-coordinate are in second element 
     for j in range(len(r_xlist)):
         all_r[i][j] = [r_xlist[j], r_ylist[j]]
-    
-exit()
 
-
+########################################
 # FINDING MEAN SQUARED DISPLACEMENT #
-msd = 0
-initX = r_xlist[0]
-initY = r_ylist[0]
+########################################
+expec_msd = [ ] # list of expected msd from t = 0 to t = tmax at intervals of stepsize h
+calc_msd = [ ] # list of calculated msd from t = 0 to t = tmax at intervals of stepsize h
 
-#for i in range(len(r_xlist)):
-    #diffx = r_xlist[i] - initX
-    #diffy = r_ylist[i] - initY
-    #difflen = math.sqrt(diffx**2 + diffy**2)
-    #temp = difflen**2
-    #msd = msd + temp
 
-#msd = msd / len(r_xlist)
+# FINDING EXPECTED MSD AT EACH TIME STAMP 
+for q in t:
+    temp = 2 * (v0**2 / dTheta**2) * (math.exp(-dTheta * q) + dTheta * q - 1)
+    expec_msd.append(temp)
 
-#disp = math.sqrt((r_xlist[len(r_xlist)-1]-initX)**2 + (r_ylist[len(r_ylist)-1]-initY)**2)
-#print('Displacement')
-#print(disp)
+# FINDING THE ACTUAL MSD AT EACH TIME STAMP
+for j in range(len(all_r[0])):
+    temp = 0
+    for i in range(len(all_r)):
+        initX = all_r[i][0][0]
+        initY = all_r[i][0][1]
+        diffx = all_r[i][j][0] - initX
+        diffy = all_r[i][j][1] - initY
+        difflensq = diffx**2 + diffy**2
+        temp = temp + difflensq
+    temp = temp / len(all_r)
+    calc_msd.append(temp)
+        
+# Making Data more viewable/user friendly #
 
-#expecmsd = 2 * (v0**2 / dTheta**2) * (math.exp(-dTheta * tmax) + dTheta * tmax - 1)
-#print('Expected MSD: ')
-#print(expecmsd)
-#print('Calculated MSD: ')
-#print(msd)
 
-# generating all_r list
+
+########################################
+# PRINTING RESULTS FROM MSD
+########################################
+
+
+print('########################################')
+print('List of all Expected MSD at every 0.05 time-step: ')
+print('########################################')
+print(expec_msd)
+print(' ')
+print('########################################')
+print('List of all calculated MSD')
+print('########################################')
+print(calc_msd)
 
 
