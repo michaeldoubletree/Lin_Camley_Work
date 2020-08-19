@@ -70,6 +70,7 @@ for i in range(0, n):
     # PLOT RESULTS #
     #########################################################
 
+
     # Plots Theta values
 
     plt.plot(t, theta_list, 'g')
@@ -140,8 +141,19 @@ for j in range(len(all_r[0])):
     calc_msd.append(temp)
         
 # Making Data more viewable/user friendly #
+results_display = [ ([0] * 3) for l in range(len(calc_msd))] # sets up list with 
+# 1st column displaying time, 2nd column displaying expected MSD at that time,
+# 3rd column displaying calculated MSD from data at that time.
 
-
+for i in range(len(results_display)):
+    if i == 0:
+        results_display[i][0] = 'Time'
+        results_display[i][1] = 'Expected MSD'
+        results_display[i][2] = 'Calculated MSD'
+    else: 
+        results_display[i][0] = t[i]
+        results_display[i][1] = expec_msd[i]
+        results_display[i][2] = calc_msd[i]
 
 ########################################
 # PRINTING RESULTS FROM MSD
@@ -149,13 +161,14 @@ for j in range(len(all_r[0])):
 
 
 print('########################################')
-print('List of all Expected MSD at every 0.05 time-step: ')
+print('Printing results......')
 print('########################################')
-print(expec_msd)
-print(' ')
-print('########################################')
-print('List of all calculated MSD')
-print('########################################')
-print(calc_msd)
 
-
+for i in range(len(results_display)):
+    if i == 0:
+        continue
+    else: 
+        print('At time t = ' + format(results_display[i][0], '.2f') +',')
+        print('Expected MSD was calculated to be: ' + format(results_display[i][1], '.8f'))
+        print('Calculated MSD was calculated to be: ' + format(results_display[i][2], '.8f'))
+        print('########################################')
