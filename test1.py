@@ -20,104 +20,128 @@ def funcy_r(theta): # differential equation for y-component of position
 def euler_theta( x0, y, h, x, l1, fun): 
     # Iterating till the point at which we 
     # need approximation 
-    while x0 < x: 
+    while x0 <= x: # Change naming
         l1.append(y)
-        y = y + h * fun()
+        y = y + math.sqrt(h) * fun()
         x0 = x0 + h 
 
 # Function for euler formula; adjusted to find the position since it requires theta
 def euler_r( x0, y, h, x, l1, supp_l, fun): 
     # Iterating till the point at which we 
     # need approximation 
-    while x0 < x:
+    while x0 <= x:
         temp_element = int(x0 / h)
         temp_theta = supp_l[temp_element]
         l1.append(y)
         y = y + h * fun(temp_theta)
         x0 = x0 + h 
-  
-#########################################################
-# FINDING THETAS #
-#########################################################
 
-t0 = 0 # initial time
-theta0 = 0 # initial theta
+n = 100 # number of times that program will iterate
 h = 0.05 # timestep
-tmax = 10.05 # endpoint t - h 
-theta_list = [ ] # list of all thetas
-t = np.linspace(0, 10, 201)
+tmax = 10 # endpoint t - h 
+colnum = int(tmax / h)
+all_r = [ [0] * colnum]  * n  # lists both x and y coordinates
 
-euler_theta(t0, theta0, h, tmax, theta_list, func_theta) # stored in theta_list
+for i in range(0, n):
+    #########################################################
+    # FINDING THETAS #
+    #########################################################
 
-#########################################################
-# FINDING POSITION #
-#########################################################
+    t0 = 0 # initial time
+    theta0 = 0 # initial theta
+    theta_list = [ ] # list of all thetas
+    t = np.linspace(0, 10, 200)
 
-r_x0 = math.cos(theta0) # initial x-coordinate of position
-r_y0 = math.sin(theta0) # initial y-coordinate of position
-r_xlist = [ ] # list of all x-coordinates of position
-r_ylist = [ ] # list of all x-coordinates of position
+    euler_theta(t0, theta0, h, tmax, theta_list, func_theta) # stored in theta_list
 
-euler_r(t0, r_x0, h, tmax, r_xlist, theta_list, funcx_r) # x-coordinates
-euler_r(t0, r_y0, h, tmax, r_ylist, theta_list, funcy_r) # y-coordinates
+    #########################################################
+    # FINDING POSITION #
+    #########################################################
 
-#########################################################
-# PLOT RESULTS #
-#########################################################
+    r_x0 = math.cos(theta0) # initial x-coordinate of position
+    r_y0 = math.sin(theta0) # initial y-coordinate of position
+    r_xlist = [ ] # list of all x-coordinates of position
+    r_ylist = [ ] # list of all y-coordinates of position
 
-# Plots Theta values
+    euler_r(t0, r_x0, h, tmax, r_xlist, theta_list, funcx_r) # x-coordinates
+    euler_r(t0, r_y0, h, tmax, r_ylist, theta_list, funcy_r) # y-coordinates
 
-plt.plot(t, theta_list, 'g')
-plt.xlabel('Time (Seconds)')
-plt.ylabel('Angle (Radians)')
-plt.title('Angle v. Time')
+    #########################################################
+    # PLOT RESULTS #
+    #########################################################
 
-plt.show()
+    # Plots Theta values
 
-# Plots individual x and y positions with respect to time
-plt.figure()
+    plt.plot(t, theta_list, 'g')
+    plt.xlabel('Time (Seconds)')
+    plt.ylabel('Angle (Radians)')
+    plt.title('Angle v. Time')
 
-plt.subplot(211)
-plt.plot(t, r_xlist, 'g')
-plt.xlabel('Time (Seconds)')
-plt.ylabel('Position (???)')
-plt.title('X-Position v. Time')
-plt.tight_layout()
+    plt.show()
 
-plt.subplot(212)
-plt.plot(t, r_ylist, 'g')
-plt.xlabel('Time (Seconds)')
-plt.ylabel('Position (???)')
-plt.title('Y-Position v. Time')
-plt.tight_layout()
+    # Plots individual x and y positions with respect to time
+    plt.figure()
 
-plt.show()
+    plt.subplot(211)
+    plt.plot(t, r_xlist, 'g')
+    plt.xlabel('Time (Seconds)')
+    plt.ylabel('Position (???)')
+    plt.title('X-Position v. Time')
+    plt.tight_layout()
 
-# Plots both positions at the same time to identify overall position
+    plt.subplot(212)
+    plt.plot(t, r_ylist, 'g')
+    plt.xlabel('Time (Seconds)')
+    plt.ylabel('Position (???)')
+    plt.title('Y-Position v. Time')
+    plt.tight_layout()
 
-plt.plot(r_xlist, r_ylist, 'b')
-plt.xlabel('X-Position')
-plt.ylabel('Y-Position')
-plt.title('Overall Position of Particle')
+    plt.show()
 
-plt.show()
+    # Plots both positions at the same time to identify overall position
+
+    plt.plot(r_xlist, r_ylist, 'b')
+    plt.xlabel('X-Position')
+    plt.ylabel('Y-Position')
+    plt.title('Overall Position of Particle')
+
+    plt.show()
+
+    # Adding to the list of values as coordinates
+    for j in range(len(r_xlist)):
+        all_r[i][j] = [r_xlist[j], r_ylist[j]]
+    
+    if i == 0:
+        print(all_r[0])
+        print(all_r[1])
+        exit() 
+
+
 
 # FINDING MEAN SQUARED DISPLACEMENT #
 msd = 0
 initX = r_xlist[0]
 initY = r_ylist[0]
 
-for i in range(len(r_xlist)):
-    diffx = r_xlist[i] - initX
-    diffy = r_ylist[i] - initY
-    difflen = math.sqrt(diffx**2 + diffy**2)
-    temp = difflen**2
-    msd = msd + temp
+#for i in range(len(r_xlist)):
+    #diffx = r_xlist[i] - initX
+    #diffy = r_ylist[i] - initY
+    #difflen = math.sqrt(diffx**2 + diffy**2)
+    #temp = difflen**2
+    #msd = msd + temp
 
-msd = msd / len(r_xlist)
+#msd = msd / len(r_xlist)
 
-expecmsd = 2 * (v0**2 / dTheta**2) * (math.exp(-dTheta * (tmax-h)) + dTheta * (tmax-h) - 1)
-print('Expected MSD: ')
-print(expecmsd)
-print('Calculated MSD: ')
-print(msd)
+#disp = math.sqrt((r_xlist[len(r_xlist)-1]-initX)**2 + (r_ylist[len(r_ylist)-1]-initY)**2)
+#print('Displacement')
+#print(disp)
+
+#expecmsd = 2 * (v0**2 / dTheta**2) * (math.exp(-dTheta * tmax) + dTheta * tmax - 1)
+#print('Expected MSD: ')
+#print(expecmsd)
+#print('Calculated MSD: ')
+#print(msd)
+
+# generating all_r list
+
+
