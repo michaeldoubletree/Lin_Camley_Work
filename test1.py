@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt # imports appropriate plotting package
 import math
 import numpy as np
+import pandas as pd
 from scipy.integrate import odeint
 
 # Python Code to find approximation of a ordinary differential equation 
@@ -172,3 +173,15 @@ for i in range(len(results_display)):
         print('Expected MSD was calculated to be: ' + format(results_display[i][1], '.8f'))
         print('Calculated MSD was calculated to be: ' + format(results_display[i][2], '.8f'))
         print('########################################')
+
+########################################
+# Saving results into Excel Sheet
+########################################
+
+print('Saving data...')
+df = pd.DataFrame(results_display)
+writer = pd.ExcelWriter('./MSD Results/test.xlsx', engine='xlsxwriter')
+df.to_excel(writer, sheet_name='MSD results', index=False)
+writer.save()
+print('########################################')
+print('Saved.')
