@@ -36,11 +36,11 @@ def euler_r( x0, y, h, x, l1, supp_l, fun):
         y = y + h * fun(temp_theta)
         x0 = x0 + h 
 
-n = 100 # number of times that program will iterate
+n = 10 # number of times that program will iterate
 h = 0.05 # timestep
 tmax = 10 # endpoint t - h 
 colnum = int(tmax / h)
-all_r = [ [0] * colnum]  * n  # lists both x and y coordinates
+all_r = [ ([0] * colnum) for l in range(n)] # lists both x and y coordinates
 
 for i in range(0, n):
     #########################################################
@@ -108,14 +108,13 @@ for i in range(0, n):
     plt.show()
 
     # Adding to the list of values as coordinates
+    # each row will have a different particle, and inside each row will be positions
+    # from t = 0 to t = tmax in intervals of stepsize h.
+    # X-coordinates are in first element, y-coordinate are in second element 
     for j in range(len(r_xlist)):
         all_r[i][j] = [r_xlist[j], r_ylist[j]]
     
-    if i == 0:
-        print(all_r[0])
-        print(all_r[1])
-        exit() 
-
+exit()
 
 
 # FINDING MEAN SQUARED DISPLACEMENT #
