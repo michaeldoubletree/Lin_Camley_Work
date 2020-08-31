@@ -28,16 +28,12 @@ def funcy_r(theta): # differential equation for y-component of position
 # function 
 def euler_theta( t0, theta, stepsize, tmax, l1, fun): 
     # Iterating till the point at which we 
-    # need approximation
-    max = int(tmax / stepsize)
-    for i in range(max):
-        l1[i] = theta
+    # need approximation 
+    while t0 < tmax:
+        temp_element = int(t0 / stepsize) 
+        l1[temp_element] = theta
         theta = theta + math.sqrt(stepsize) * fun()
-    #while t0 < tmax:
-        #temp_element = int(t0 / stepsize) 
-        #l1[temp_element] = theta
-        #theta = theta + math.sqrt(stepsize) * fun()
-        #t0 = t0 + stepsize 
+        t0 = t0 + stepsize 
 
 # Function for euler formula; adjusted to find the position since it requires theta
 #########################################################
@@ -49,18 +45,12 @@ def euler_theta( t0, theta, stepsize, tmax, l1, fun):
 def euler_r( t0, position, stepsize, tmax, l1, supp_l, fun): 
     # Iterating till the point at which we 
     # need approximation 
-    max = int(tmax / stepsize)
-    for i in range(max):
-        l1[i] = position
-        temp_theta = supp_l[i]
-        position = position + stepsize * fun(temp_theta)  
-    #while t0 < tmax:
-        #temp_element = int(t0 / stepsize)
-        #print(temp_element)
-        #temp_theta = supp_l[temp_element]
-        #l1[temp_element] = position
-        #position = position + stepsize * fun(temp_theta)
-        #t0 = t0 + stepsize 
+    while t0 < tmax:
+        temp_element = int(t0 / stepsize)
+        temp_theta = supp_l[temp_element]
+        l1[temp_element] = position
+        position = position + stepsize * fun(temp_theta)
+        t0 = t0 + stepsize 
 
 n = 100 # number of times that program will iterate
 h = 0.05 # timestep
@@ -77,6 +67,7 @@ for i in range(0, n):
     theta0 = 2 * math.pi * np.random.randn() # initial theta; consider adding 2 pi times randn
     theta_list = np.empty(colnum) # list of all thetas
     t = np.linspace(0, 10, 201)
+
 
     euler_theta(t0, theta0, h, tmax, theta_list, func_theta) # stored in theta_list
 
@@ -124,8 +115,8 @@ writer.save()
 print('########################################')
 print('Saved.')
 
-plt.plot(t, expec_msd, label = 'Expected MSD')
-plt.plot(t, calc_msd, label = 'Calculated MSD')
+plt.loglog(t, expec_msd, label = 'Expected MSD')
+plt.loglog(t, calc_msd, label = 'Calculated MSD')
 plt.axvline(x = (1/dTheta), linestyle = '--', label = '1/D')
 plt.legend()
 plt.show()

@@ -15,10 +15,11 @@ def func_theta(): # differential equation for theta
     return (math.sqrt(2 * dTheta) * np.random.randn())
 
 v0 = 1 # initial velocity
-def funcx_r(theta): # differential equation for x-component of position
-    return(v0 * math.cos(theta)) 
-def funcy_r(theta): # differential equation for y-component of position
-    return(v0 * math.sin(theta))
+k = 2
+def funcx_r(theta, posit_x): # differential equation for x-component of position
+    return(v0 * math.cos(theta) - k * posit_x) 
+def funcy_r(theta, posit_y): # differential equation for y-component of position
+    return(v0 * math.sin(theta) - k * posit_y)
       
 # Function for euler formula; will be only used to find the theta 
 #########################################################
@@ -28,16 +29,12 @@ def funcy_r(theta): # differential equation for y-component of position
 # function 
 def euler_theta( t0, theta, stepsize, tmax, l1, fun): 
     # Iterating till the point at which we 
-    # need approximation
-    max = int(tmax / stepsize)
-    for i in range(max):
-        l1[i] = theta
+    # need approximation 
+    while t0 < tmax:
+        temp_element = int(t0 / stepsize) 
+        l1[temp_element] = theta
         theta = theta + math.sqrt(stepsize) * fun()
-    #while t0 < tmax:
-        #temp_element = int(t0 / stepsize) 
-        #l1[temp_element] = theta
-        #theta = theta + math.sqrt(stepsize) * fun()
-        #t0 = t0 + stepsize 
+        t0 = t0 + stepsize 
 
 # Function for euler formula; adjusted to find the position since it requires theta
 #########################################################
@@ -46,26 +43,20 @@ def euler_theta( t0, theta, stepsize, tmax, l1, fun):
 # l1 is the list that contains each position value per iteration, fun is the differential 
 # function, supp_l is the supplemental list of thetas that is provided to find the
 # positions
-def euler_r( t0, position, stepsize, tmax, l1, supp_l, fun): 
+def euler_r( t0, position, stepsize, tmax, l1, supp_l1, fun): 
     # Iterating till the point at which we 
     # need approximation 
-    max = int(tmax / stepsize)
-    for i in range(max):
-        l1[i] = position
-        temp_theta = supp_l[i]
-        position = position + stepsize * fun(temp_theta)  
-    #while t0 < tmax:
-        #temp_element = int(t0 / stepsize)
-        #print(temp_element)
-        #temp_theta = supp_l[temp_element]
-        #l1[temp_element] = position
-        #position = position + stepsize * fun(temp_theta)
-        #t0 = t0 + stepsize 
+    while t0 < tmax:
+        temp_element = int(t0 / stepsize)
+        temp_theta = supp_l1[temp_element]
+        l1[temp_element] = position
+        position = position + stepsize * fun(temp_theta, position)
+        t0 = t0 + stepsize 
 
-n = 100 # number of times that program will iterate
+n = 10 # number of times that program will iterate
 h = 0.05 # timestep
 tmax = 10.05 # endpoint t - h 
-colnum = int(tmax / h)
+colnum = int(tmax / h) # of time points
 all_r = np.empty([n, colnum, 2], dtype = float)
 
 for i in range(0, n):
@@ -92,40 +83,44 @@ for i in range(0, n):
     euler_r(t0, r_x0, h, tmax, all_r[i,:,0], theta_list, funcx_r) # x-coordinates
     euler_r(t0, r_y0, h, tmax, all_r[i,:,1], theta_list, funcy_r) # y-coordinates
 
+    #########################################################
+    # PLOT RESULTS #
+    #########################################################
 
 
-########################################
-# FINDING MEAN SQUARED DISPLACEMENT #
-########################################
-calc_msd = np.empty(colnum) # list of calculated msd from t = 0 to t = tmax at intervals of stepsize h
+    # Plots Theta values
 
+    plt.plot(t, theta_list, 'g')
+    plt.xlabel('Time (Seconds)')
+    plt.ylabel('Angle (Radians)')
+    plt.title('Angle v. Time: Trial ' + str((i+1)))
 
-# FINDING EXPECTED MSD AT EACH TIME STAMP 
-expec_msd = 2 * (v0**2 / dTheta**2) * (np.exp(-dTheta * t) + dTheta * t - np.ones(np.size(t)))
+    plt.show()
 
-# FINDING THE ACTUAL MSD AT EACH TIME STAMP # t = 0.6 (j = 12), 9.45 always inf
-for j in np.arange(np.size(all_r[0,:,0])):
-    diffx = all_r[:,j,0] - all_r[:,0,0]
-    diffy = all_r[:,j,1] - all_r[:,0,1]
-    temp = diffx**2 + diffy**2
-    temp /= np.size(all_r[:,0,0])
-    calc_msd[j] = temp.sum()
+    # Plots individual x and y positions with respect to time
+    plt.figure()
 
+    plt.subplot(211)
+    plt.plot(t, all_r[i,:,0], 'g')
+    plt.xlabel('Time (Seconds)')
+    plt.ylabel('Position (???)')
+    plt.title('X-Position v. Time: Trial ' + str((i+1)))
+    plt.tight_layout()
 
-########################################
-# Saving results into Excel Sheet
-########################################
+    plt.subplot(212)
+    plt.plot(t, all_r[i,:,1], 'g')
+    plt.xlabel('Time (Seconds)')
+    plt.ylabel('Position (???)')
+    plt.title('Y-Position v. Time: Trial ' + str((i+1)))
+    plt.tight_layout()
 
-print('Saving data...')
-df = pd.DataFrame({'Time': t, 'Expected MSD': list(expec_msd), 'Calculated MSD': list(calc_msd)})
-writer = pd.ExcelWriter('./MSD Results/msd_100.xlsx', engine='xlsxwriter')
-df.to_excel(writer, sheet_name='MSD results', index=False)
-writer.save()
-print('########################################')
-print('Saved.')
+    plt.show()
 
-plt.plot(t, expec_msd, label = 'Expected MSD')
-plt.plot(t, calc_msd, label = 'Calculated MSD')
-plt.axvline(x = (1/dTheta), linestyle = '--', label = '1/D')
-plt.legend()
-plt.show()
+    # Plots both positions at the same time to identify overall position
+
+    plt.plot(all_r[i,:,0], all_r[i,:,1], 'b')
+    plt.xlabel('X-Position')
+    plt.ylabel('Y-Position')
+    plt.title('Overall Position of Particle: Trial ' + str((i+1)))
+
+    plt.show()
