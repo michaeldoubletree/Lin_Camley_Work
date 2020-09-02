@@ -119,3 +119,7 @@ plt.loglog(t, calc_msd, label = 'Calculated MSD')
 plt.axvline(x = (1/dTheta), linestyle = '--', label = '1/D')
 plt.legend()
 plt.show()
+
+plt.hist(expec_msd, 15, facecolor = 'blue', alpha = 0.5)
+plt.hist(calc_msd, 15, facecolor = 'red', alpha = 0.5)
+plt.show()
