@@ -16,9 +16,9 @@ def func_theta(): # differential equation for theta
 
 v0 = 1 # initial velocity
 k = 2 # force constant
-def funcx_r(theta, positx): # differential equation for x-component of position
+def funcx_r(theta, posit_x): # differential equation for x-component of position
     return(v0 * math.cos(theta) - k * posit_x) 
-def funcy_r(theta, posity): # differential equation for y-component of position
+def funcy_r(theta, posit_y): # differential equation for y-component of position
     return(v0 * math.sin(theta) - k * posit_y)
       
 # Function for euler formula; will be only used to find the theta 
@@ -50,9 +50,9 @@ def euler_r( t0, position, stepsize, tmax, l1, supp_l, fun):
     for i in range(max):
         l1[i] = position
         temp_theta = supp_l[i]
-        position = position + stepsize * fun(temp_theta)  
+        position = position + stepsize * fun(temp_theta, position)  
 
-n = 100 # number of times that program will iterate
+n = 1000 # number of times that program will iterate
 h = 0.05 # timestep
 tmax = 10.05 # endpoint t - h 
 colnum = int(tmax / h)
@@ -109,7 +109,7 @@ for j in np.arange(np.size(all_r[0,:,0])):
 
 print('Saving data...')
 df = pd.DataFrame({'Time': t, 'Expected MSD': list(expec_msd), 'Calculated MSD': list(calc_msd)})
-writer = pd.ExcelWriter('./MSD Results/msd_100.xlsx', engine='xlsxwriter')
+writer = pd.ExcelWriter('./MSD Results/msd_100_force.xlsx', engine='xlsxwriter')
 df.to_excel(writer, sheet_name='MSD results', index=False)
 writer.save()
 print('########################################')
