@@ -33,11 +33,7 @@ def euler_theta( t0, theta, stepsize, tmax, l1, fun):
     for i in range(max):
         l1[i] = theta
         theta = theta + math.sqrt(stepsize) * fun()
-    #while t0 < tmax:
-        #temp_element = int(t0 / stepsize) 
-        #l1[temp_element] = theta
-        #theta = theta + math.sqrt(stepsize) * fun()
-        #t0 = t0 + stepsize 
+
 
 # Function for euler formula; adjusted to find the position since it requires theta
 #########################################################
@@ -54,15 +50,9 @@ def euler_r( t0, position, stepsize, tmax, l1, supp_l, fun):
         l1[i] = position
         temp_theta = supp_l[i]
         position = position + stepsize * fun(temp_theta)  
-    #while t0 < tmax:
-        #temp_element = int(t0 / stepsize)
-        #print(temp_element)
-        #temp_theta = supp_l[temp_element]
-        #l1[temp_element] = position
-        #position = position + stepsize * fun(temp_theta)
-        #t0 = t0 + stepsize 
 
-n = 100 # number of times that program will iterate
+
+n = 500 # number of times that program will iterate
 h = 0.05 # timestep
 tmax = 10.05 # endpoint t - h 
 colnum = int(tmax / h)
@@ -84,8 +74,8 @@ for i in range(0, n):
     # FINDING POSITION #
     #########################################################
 
-    r_x0 = math.cos(theta0) # initial x-coordinate of position
-    r_y0 = math.sin(theta0) # initial y-coordinate of position
+    r_x0 = 0 # initial x-coordinate of position
+    r_y0 = 0 # initial y-coordinate of position
     r_xlist = np.empty(colnum) # list of all x-coordinates of position
     r_ylist = np.empty(colnum) # list of all y-coordinates of position
 
@@ -124,8 +114,8 @@ writer.save()
 print('########################################')
 print('Saved.')
 
-plt.plot(t, expec_msd, label = 'Expected MSD')
-plt.plot(t, calc_msd, label = 'Calculated MSD')
+plt.loglog(t, expec_msd, label = 'Expected MSD')
+plt.loglog(t, calc_msd, label = 'Calculated MSD')
 plt.axvline(x = (1/dTheta), linestyle = '--', label = '1/D')
 plt.legend()
 plt.show()
