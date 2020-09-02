@@ -1,5 +1,5 @@
 # Michael Lin
-# Only calculates MSD for multiple particles; no plot so we can put in more points
+# Only MSD
 
 import matplotlib.pyplot as plt # imports appropriate plotting package
 import math
@@ -15,10 +15,11 @@ def func_theta(): # differential equation for theta
     return (math.sqrt(2 * dTheta) * np.random.randn())
 
 v0 = 1 # initial velocity
-def funcx_r(theta): # differential equation for x-component of position
-    return(v0 * math.cos(theta)) 
-def funcy_r(theta): # differential equation for y-component of position
-    return(v0 * math.sin(theta))
+k = 2 # force constant
+def funcx_r(theta, positx): # differential equation for x-component of position
+    return(v0 * math.cos(theta) - k * posit_x) 
+def funcy_r(theta, posity): # differential equation for y-component of position
+    return(v0 * math.sin(theta) - k * posit_y)
       
 # Function for euler formula; will be only used to find the theta 
 #########################################################
@@ -28,12 +29,12 @@ def funcy_r(theta): # differential equation for y-component of position
 # function 
 def euler_theta( t0, theta, stepsize, tmax, l1, fun): 
     # Iterating till the point at which we 
-    # need approximation 
-    while t0 < tmax:
-        temp_element = int(t0 / stepsize) 
-        l1[temp_element] = theta
+    # need approximation
+    max = int(tmax / stepsize)
+    for i in range(max):
+        l1[i] = theta
         theta = theta + math.sqrt(stepsize) * fun()
-        t0 = t0 + stepsize 
+
 
 # Function for euler formula; adjusted to find the position since it requires theta
 #########################################################
@@ -45,12 +46,11 @@ def euler_theta( t0, theta, stepsize, tmax, l1, fun):
 def euler_r( t0, position, stepsize, tmax, l1, supp_l, fun): 
     # Iterating till the point at which we 
     # need approximation 
-    while t0 < tmax:
-        temp_element = int(t0 / stepsize)
-        temp_theta = supp_l[temp_element]
-        l1[temp_element] = position
-        position = position + stepsize * fun(temp_theta)
-        t0 = t0 + stepsize 
+    max = int(tmax / stepsize)
+    for i in range(max):
+        l1[i] = position
+        temp_theta = supp_l[i]
+        position = position + stepsize * fun(temp_theta)  
 
 n = 100 # number of times that program will iterate
 h = 0.05 # timestep
@@ -75,8 +75,8 @@ for i in range(0, n):
     # FINDING POSITION #
     #########################################################
 
-    r_x0 = math.cos(theta0) # initial x-coordinate of position
-    r_y0 = math.sin(theta0) # initial y-coordinate of position
+    r_x0 = 0 # initial x-coordinate of position
+    r_y0 = 0 # initial y-coordinate of position
     r_xlist = np.empty(colnum) # list of all x-coordinates of position
     r_ylist = np.empty(colnum) # list of all y-coordinates of position
 

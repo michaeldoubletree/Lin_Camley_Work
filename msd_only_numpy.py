@@ -52,7 +52,7 @@ def euler_r( t0, position, stepsize, tmax, l1, supp_l, fun):
         position = position + stepsize * fun(temp_theta)  
 
 
-n = 500 # number of times that program will iterate
+n = 1000 # number of times that program will iterate
 h = 0.05 # timestep
 tmax = 10.05 # endpoint t - h 
 colnum = int(tmax / h)
@@ -93,7 +93,7 @@ calc_msd = np.empty(colnum) # list of calculated msd from t = 0 to t = tmax at i
 # FINDING EXPECTED MSD AT EACH TIME STAMP 
 expec_msd = 2 * (v0**2 / dTheta**2) * (np.exp(-dTheta * t) + dTheta * t - np.ones(np.size(t)))
 
-# FINDING THE ACTUAL MSD AT EACH TIME STAMP # t = 0.6 (j = 12), 9.45 always inf
+# FINDING THE ACTUAL MSD AT EACH TIME STAMP 
 for j in np.arange(np.size(all_r[0,:,0])):
     diffx = all_r[:,j,0] - all_r[:,0,0]
     diffy = all_r[:,j,1] - all_r[:,0,1]
