@@ -28,11 +28,11 @@ def funcy_r(theta): # differential equation for y-component of position
 # function 
 def euler_theta( t0, theta, stepsize, tmax, l1, fun): 
     # Iterating till the point at which we 
-    # need approximation 
-    while t0 < tmax: 
-        l1.append(theta)
+    # need approximation
+    max = int(tmax / stepsize)
+    for i in range(max):
+        l1[i] = theta
         theta = theta + math.sqrt(stepsize) * fun()
-        t0 = t0 + stepsize 
 
 # Function for euler formula; adjusted to find the position since it requires theta
 #########################################################
@@ -44,18 +44,17 @@ def euler_theta( t0, theta, stepsize, tmax, l1, fun):
 def euler_r( t0, position, stepsize, tmax, l1, supp_l, fun): 
     # Iterating till the point at which we 
     # need approximation 
-    while t0 < tmax:
-        temp_element = int(t0 / stepsize)
-        temp_theta = supp_l[temp_element]
-        l1.append(position)
-        position = position + stepsize * fun(temp_theta)
-        t0 = t0 + stepsize 
+    max = int(tmax / stepsize)
+    for i in range(max):
+        l1[i] = position
+        temp_theta = supp_l[i]
+        position = position + stepsize * fun(temp_theta)  
 
 n = 10 # number of times that program will iterate
 h = 0.05 # timestep
 tmax = 10.05 # endpoint t - h 
 colnum = int(tmax / h)
-all_r = [ ([0] * colnum) for l in range(n)] # lists both x and y coordinates
+all_r = np.empty([n, colnum, 2], dtype = float)
 
 for i in range(0, n):
     #########################################################
@@ -63,8 +62,8 @@ for i in range(0, n):
     #########################################################
 
     t0 = 0 # initial time
-    theta0 = 0 # initial theta
-    theta_list = [ ] # list of all thetas
+    theta0 = 2 * math.pi * np.random.randn() # initial theta
+    theta_list = np.empty(colnum)
     t = np.linspace(0, 10, 201)
 
     euler_theta(t0, theta0, h, tmax, theta_list, func_theta) # stored in theta_list
@@ -73,13 +72,11 @@ for i in range(0, n):
     # FINDING POSITION #
     #########################################################
 
-    r_x0 = math.cos(theta0) # initial x-coordinate of position
-    r_y0 = math.sin(theta0) # initial y-coordinate of position
-    r_xlist = [ ] # list of all x-coordinates of position
-    r_ylist = [ ] # list of all y-coordinates of position
+    r_x0 = 0 # initial x-coordinate of position
+    r_y0 = 0 # initial y-coordinate of position
 
-    euler_r(t0, r_x0, h, tmax, r_xlist, theta_list, funcx_r) # x-coordinates
-    euler_r(t0, r_y0, h, tmax, r_ylist, theta_list, funcy_r) # y-coordinates
+    euler_r(t0, r_x0, h, tmax, all_r[i,:,0], theta_list, funcx_r) # x-coordinates
+    euler_r(t0, r_y0, h, tmax, all_r[i,:,1], theta_list, funcy_r) # y-coordinates
 
     #########################################################
     # PLOT RESULTS #
@@ -99,14 +96,14 @@ for i in range(0, n):
     plt.figure()
 
     plt.subplot(211)
-    plt.plot(t, r_xlist, 'g')
+    plt.plot(t, all_r[i,:,0], 'g')
     plt.xlabel('Time (Seconds)')
     plt.ylabel('Position (???)')
     plt.title('X-Position v. Time: Trial ' + str((i+1)))
     plt.tight_layout()
 
     plt.subplot(212)
-    plt.plot(t, r_ylist, 'g')
+    plt.plot(t, all_r[i,:,1], 'g')
     plt.xlabel('Time (Seconds)')
     plt.ylabel('Position (???)')
     plt.title('Y-Position v. Time: Trial ' + str((i+1)))
@@ -116,86 +113,37 @@ for i in range(0, n):
 
     # Plots both positions at the same time to identify overall position
 
-    plt.plot(r_xlist, r_ylist, 'b')
+    plt.plot(all_r[i,:,0], all_r[i,:,1], 'b')
     plt.xlabel('X-Position')
     plt.ylabel('Y-Position')
     plt.title('Overall Position of Particle: Trial ' + str((i+1)))
 
     plt.show()
 
-    # Adding to the list of values as coordinates
-    # each row will have a different particle, and inside each row will be positions
-    # from t = 0 to t = tmax in intervals of stepsize h.
-    # X-coordinates are in first element, y-coordinate are in second element 
-    for j in range(len(r_xlist)):
-        all_r[i][j] = [r_xlist[j], r_ylist[j]]
+    # Turns the Positions to Histograms
 
-########################################
-# FINDING MEAN SQUARED DISPLACEMENT #
-########################################
-expec_msd = [ ] # list of expected msd from t = 0 to t = tmax at intervals of stepsize h
-calc_msd = [ ] # list of calculated msd from t = 0 to t = tmax at intervals of stepsize h
+    plt.figure()
 
+    plt.subplot(211)
+    plt.hist(all_r[i,:,0], edgecolor = 'black', linewidth = 1)
+    plt.xlabel('X-Position')
+    plt.ylabel('Frequency')
+    plt.title('X-Position Frequencies: Trial ' + str((i+1)))
 
-# FINDING EXPECTED MSD AT EACH TIME STAMP 
-for q in t:
-    temp = 2 * (v0**2 / dTheta**2) * (math.exp(-dTheta * q) + dTheta * q - 1)
-    expec_msd.append(temp)
+    plt.subplot(212)
+    plt.hist(all_r[i,:,1], edgecolor = 'black', linewidth = 1)
+    plt.xlabel('Y-Position')
+    plt.ylabel('Frequency')
+    plt.title('Y-Position Frequencies: Trial ' + str((i+1)))
 
-# FINDING THE ACTUAL MSD AT EACH TIME STAMP
-for j in range(len(all_r[0])):
-    temp = 0 
-    for i in range(len(all_r)): # iterates through each point in a particular time point
-        initX = all_r[i][0][0] # initial x-coordinate
-        initY = all_r[i][0][1] # initial y-coordinate
-        diffx = all_r[i][j][0] - initX # difference between x coordinates
-        diffy = all_r[i][j][1] - initY # difference between y coordinates
-        difflensq = diffx**2 + diffy**2 # the length squared 
-        temp = temp + difflensq # adds up all the length squared at a particular time point
-    temp = temp / len(all_r) # divide by number of particles
-    calc_msd.append(temp) # appends to the calculated list at a particular timestamp
-        
-# Making Data more viewable/user friendly #
-results_display = [ ([0] * 3) for l in range(len(calc_msd))] # sets up list with 
-# 1st column displaying time, 2nd column displaying expected MSD at that time,
-# 3rd column displaying calculated MSD from data at that time.
+    plt.tight_layout()
+    plt.show()
 
-for i in range(len(results_display)):
-    if i == 0: # titles the data in the first row
-        results_display[i][0] = 'Time'
-        results_display[i][1] = 'Expected MSD'
-        results_display[i][2] = 'Calculated MSD'
-    else: # puts the time, expected msd, calculated msd in their respective columns
-        results_display[i][0] = t[i]
-        results_display[i][1] = expec_msd[i]
-        results_display[i][2] = calc_msd[i]
-
-########################################
-# PRINTING RESULTS FROM MSD
-########################################
-
-
-#print('########################################')
-#print('Printing results......')
-#print('########################################')
-
-#for i in range(len(results_display)):
-    #if i == 0:
-        #continue
-    #else: 
-        #print('At time t = ' + format(results_display[i][0], '.2f') +',')
-        #print('Expected MSD was calculated to be: ' + format(results_display[i][1], '.8f'))
-        #print('Calculated MSD was calculated to be: ' + format(results_display[i][2], '.8f'))
-        #print('########################################')
-
-########################################
-# Saving results into Excel Sheet
-########################################
-
-print('Saving data...')
-df = pd.DataFrame(results_display)
-writer = pd.ExcelWriter('../MSD Results/msd_10.xlsx', engine='xlsxwriter')
-df.to_excel(writer, sheet_name='MSD results', index=False)
-writer.save()
-print('########################################')
-print('Saved.')
+    # Histogram of overall position
+    plt.figure()
+    r_overall = np.sqrt(all_r[i,:,0]**2 + all_r[i,:,1]**2)
+    plt.hist(r_overall, edgecolor = 'black', linewidth = 1)
+    plt.xlabel('Overall Distance from Origin')
+    plt.ylabel('Frequency')
+    plt.title('Overall Position Frequencies: Trial ' + str((i+1)))
+    plt.show()

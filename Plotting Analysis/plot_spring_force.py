@@ -76,8 +76,6 @@ for i in range(0, n):
 
     r_x0 = math.cos(theta0) # initial x-coordinate of position
     r_y0 = math.sin(theta0) # initial y-coordinate of position
-    r_xlist = np.empty(colnum) # list of all x-coordinates of position
-    r_ylist = np.empty(colnum) # list of all y-coordinates of position
 
     euler_r(t0, r_x0, h, tmax, all_r[i,:,0], theta_list, funcx_r) # x-coordinates
     euler_r(t0, r_y0, h, tmax, all_r[i,:,1], theta_list, funcy_r) # y-coordinates
@@ -122,4 +120,32 @@ for i in range(0, n):
     plt.ylabel('Y-Position')
     plt.title('Overall Position of Particle: Trial ' + str((i+1)))
 
+    plt.show()
+    
+    # Turns the Positions to Histograms
+
+    plt.figure()
+
+    plt.subplot(211)
+    plt.hist(all_r[i,:,0], edgecolor = 'black', linewidth = 1)
+    plt.xlabel('X-Position')
+    plt.ylabel('Frequency')
+    plt.title('X-Position Frequencies: Trial ' + str((i+1)))
+
+    plt.subplot(212)
+    plt.hist(all_r[i,:,1], edgecolor = 'black', linewidth = 1)
+    plt.xlabel('Y-Position')
+    plt.ylabel('Frequency')
+    plt.title('Y-Position Frequencies: Trial ' + str((i+1)))
+
+    plt.tight_layout()
+    plt.show()
+
+    # Histogram of overall position
+    plt.figure()
+    r_overall = np.sqrt(all_r[i,:,0]**2 + all_r[i,:,1]**2)
+    plt.hist(r_overall, edgecolor = 'black', linewidth = 1)
+    plt.xlabel('Overall Distance from Origin')
+    plt.ylabel('Frequency')
+    plt.title('Overall Position Frequencies: Trial ' + str((i+1)))
     plt.show()

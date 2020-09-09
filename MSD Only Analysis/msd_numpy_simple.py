@@ -109,7 +109,7 @@ for j in np.arange(np.size(all_r[0,:,0])):
 print('Saving data...')
 df = pd.DataFrame({'Time': t, 'Expected MSD': list(expec_msd), 'Calculated MSD': list(calc_msd)})
 writer = pd.ExcelWriter('../MSD Results/msd_100.xlsx', engine='xlsxwriter')
-df.to_excel(writer, sheet_name='MSD results', index=False)
+df.to_excel(writer, sheet_name='MSD results No Force', index=False)
 writer.save()
 print('########################################')
 print('Saved.')
