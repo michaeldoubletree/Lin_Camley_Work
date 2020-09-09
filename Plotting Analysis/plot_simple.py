@@ -26,13 +26,14 @@ def funcy_r(theta): # differential equation for y-component of position
 # stepsize is the increment the Euler function ascends by, tmax is the upper bound of time
 # l1 is the list that contains each theta value per iteration, fun is the differential 
 # function 
-def euler_theta( t0, theta, stepsize, tmax, l1, fun): 
+def euler_theta(theta, t, l1, fun): 
     # Iterating till the point at which we 
     # need approximation
-    max = int(tmax / stepsize)
-    for i in range(max):
+    stepsize = t[1] - t[0]
+    for i in range(len(t)):
         l1[i] = theta
         theta = theta + math.sqrt(stepsize) * fun()
+
 
 # Function for euler formula; adjusted to find the position since it requires theta
 #########################################################
@@ -41,19 +42,19 @@ def euler_theta( t0, theta, stepsize, tmax, l1, fun):
 # l1 is the list that contains each position value per iteration, fun is the differential 
 # function, supp_l is the supplemental list of thetas that is provided to find the
 # positions
-def euler_r( t0, position, stepsize, tmax, l1, supp_l, fun): 
+
+def euler_r(position, t, l1, supp_l, fun): 
     # Iterating till the point at which we 
     # need approximation 
-    max = int(tmax / stepsize)
-    for i in range(max):
+    stepsize = t[1] - t[0]
+    for i in range(len(t)):
         l1[i] = position
         temp_theta = supp_l[i]
         position = position + stepsize * fun(temp_theta)  
 
 n = 10 # number of times that program will iterate
-h = 0.05 # timestep
-tmax = 10.05 # endpoint t - h 
-colnum = int(tmax / h)
+t = np.linspace(0, 10, 201)
+colnum = len(t)
 all_r = np.empty([n, colnum, 2], dtype = float)
 
 for i in range(0, n):
@@ -61,12 +62,10 @@ for i in range(0, n):
     # FINDING THETAS #
     #########################################################
 
-    t0 = 0 # initial time
     theta0 = 2 * math.pi * np.random.randn() # initial theta
     theta_list = np.empty(colnum)
-    t = np.linspace(0, 10, 201)
 
-    euler_theta(t0, theta0, h, tmax, theta_list, func_theta) # stored in theta_list
+    euler_theta(theta0, t, theta_list, func_theta) # stored in theta_list
 
     #########################################################
     # FINDING POSITION #
@@ -75,8 +74,8 @@ for i in range(0, n):
     r_x0 = 0 # initial x-coordinate of position
     r_y0 = 0 # initial y-coordinate of position
 
-    euler_r(t0, r_x0, h, tmax, all_r[i,:,0], theta_list, funcx_r) # x-coordinates
-    euler_r(t0, r_y0, h, tmax, all_r[i,:,1], theta_list, funcy_r) # y-coordinates
+    euler_r(r_x0, t, all_r[i,:,0], theta_list, funcx_r) # x-coordinates
+    euler_r(r_y0, t, all_r[i,:,1], theta_list, funcy_r) # y-coordinates
 
     #########################################################
     # PLOT RESULTS #
