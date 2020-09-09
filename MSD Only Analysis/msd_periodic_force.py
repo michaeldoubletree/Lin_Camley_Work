@@ -1,5 +1,5 @@
 # Michael Lin
-# Only calculates MSD for multiple particles; no plot so we can put in more points
+# Only MSD
 
 import matplotlib.pyplot as plt # imports appropriate plotting package
 import math
@@ -15,10 +15,11 @@ def func_theta(): # differential equation for theta
     return (math.sqrt(2 * dTheta) * np.random.randn())
 
 v0 = 1 # initial velocity
-def funcx_r(theta): # differential equation for x-component of position
-    return(v0 * math.cos(theta)) 
-def funcy_r(theta): # differential equation for y-component of position
-    return(v0 * math.sin(theta))
+k = 1 # force constant
+def funcx_r(theta, posit_x): # differential equation for x-component of position
+    return(v0 * math.cos(theta) + k * math.cos(theta)) 
+def funcy_r(theta, posit_y): # differential equation for y-component of position
+    return(v0 * math.sin(theta) + k * math.cos(theta))
       
 # Function for euler formula; will be only used to find the theta 
 #########################################################
@@ -49,8 +50,7 @@ def euler_r( t0, position, stepsize, tmax, l1, supp_l, fun):
     for i in range(max):
         l1[i] = position
         temp_theta = supp_l[i]
-        position = position + stepsize * fun(temp_theta)  
-
+        position = position + stepsize * fun(temp_theta, position)  
 
 n = 1000 # number of times that program will iterate
 h = 0.05 # timestep
@@ -67,6 +67,7 @@ for i in range(0, n):
     theta0 = 2 * math.pi * np.random.randn() # initial theta; consider adding 2 pi times randn
     theta_list = np.empty(colnum) # list of all thetas
     t = np.linspace(0, 10, 201)
+
 
     euler_theta(t0, theta0, h, tmax, theta_list, func_theta) # stored in theta_list
 
@@ -93,7 +94,7 @@ calc_msd = np.empty(colnum) # list of calculated msd from t = 0 to t = tmax at i
 # FINDING EXPECTED MSD AT EACH TIME STAMP 
 expec_msd = 2 * (v0**2 / dTheta**2) * (np.exp(-dTheta * t) + dTheta * t - np.ones(np.size(t)))
 
-# FINDING THE ACTUAL MSD AT EACH TIME STAMP 
+# FINDING THE ACTUAL MSD AT EACH TIME STAMP # t = 0.6 (j = 12), 9.45 always inf
 for j in np.arange(np.size(all_r[0,:,0])):
     diffx = all_r[:,j,0] - all_r[:,0,0]
     diffy = all_r[:,j,1] - all_r[:,0,1]
@@ -108,8 +109,8 @@ for j in np.arange(np.size(all_r[0,:,0])):
 
 print('Saving data...')
 df = pd.DataFrame({'Time': t, 'Expected MSD': list(expec_msd), 'Calculated MSD': list(calc_msd)})
-writer = pd.ExcelWriter('../MSD Results/msd_noforce.xlsx', engine='xlsxwriter')
-df.to_excel(writer, sheet_name='MSD results No Force', index=False)
+writer = pd.ExcelWriter('../MSD Results/msd_periodic_force.xlsx', engine='xlsxwriter')
+df.to_excel(writer, sheet_name='MSD results Periodic Force', index=False)
 writer.save()
 print('########################################')
 print('Saved.')
