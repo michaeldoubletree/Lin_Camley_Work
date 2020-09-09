@@ -108,7 +108,7 @@ for j in np.arange(np.size(all_r[0,:,0])):
 
 print('Saving data...')
 df = pd.DataFrame({'Time': t, 'Expected MSD': list(expec_msd), 'Calculated MSD': list(calc_msd)})
-writer = pd.ExcelWriter('./MSD Results/msd_100.xlsx', engine='xlsxwriter')
+writer = pd.ExcelWriter('../MSD Results/msd_100.xlsx', engine='xlsxwriter')
 df.to_excel(writer, sheet_name='MSD results', index=False)
 writer.save()
 print('########################################')
@@ -119,6 +119,7 @@ plt.loglog(t, calc_msd, label = 'Calculated MSD')
 plt.axvline(x = (1/dTheta), linestyle = '--', label = '1/D')
 plt.legend()
 plt.show()
+
 
 plt.hist(expec_msd, 15, facecolor = 'blue', alpha = 0.5)
 plt.hist(calc_msd, 15, facecolor = 'red', alpha = 0.5)

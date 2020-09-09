@@ -1,5 +1,5 @@
 # Michael Lin
-# Only calculates MSD for multiple particles; no plot so we can put in more points
+# Plots and calculates MSD for multiple particles
 
 import matplotlib.pyplot as plt # imports appropriate plotting package
 import math
@@ -10,7 +10,7 @@ from scipy.integrate import odeint
 # Python Code to find approximation of a ordinary differential equation 
 # using euler method. 
 
-dTheta = 0.5
+dTheta = 1
 def func_theta(): # differential equation for theta
     return (math.sqrt(2 * dTheta) * np.random.randn())
 
@@ -51,7 +51,7 @@ def euler_r( t0, position, stepsize, tmax, l1, supp_l, fun):
         position = position + stepsize * fun(temp_theta)
         t0 = t0 + stepsize 
 
-n = 1000 # number of times that program will iterate
+n = 10 # number of times that program will iterate
 h = 0.05 # timestep
 tmax = 10.05 # endpoint t - h 
 colnum = int(tmax / h)
@@ -63,7 +63,7 @@ for i in range(0, n):
     #########################################################
 
     t0 = 0 # initial time
-    theta0 = 0 # initial theta; consider adding 2 pi times randn
+    theta0 = 0 # initial theta
     theta_list = [ ] # list of all thetas
     t = np.linspace(0, 10, 201)
 
@@ -80,6 +80,48 @@ for i in range(0, n):
 
     euler_r(t0, r_x0, h, tmax, r_xlist, theta_list, funcx_r) # x-coordinates
     euler_r(t0, r_y0, h, tmax, r_ylist, theta_list, funcy_r) # y-coordinates
+
+    #########################################################
+    # PLOT RESULTS #
+    #########################################################
+
+
+    # Plots Theta values
+
+    plt.plot(t, theta_list, 'g')
+    plt.xlabel('Time (Seconds)')
+    plt.ylabel('Angle (Radians)')
+    plt.title('Angle v. Time: Trial ' + str((i+1)))
+
+    plt.show()
+
+    # Plots individual x and y positions with respect to time
+    plt.figure()
+
+    plt.subplot(211)
+    plt.plot(t, r_xlist, 'g')
+    plt.xlabel('Time (Seconds)')
+    plt.ylabel('Position (???)')
+    plt.title('X-Position v. Time: Trial ' + str((i+1)))
+    plt.tight_layout()
+
+    plt.subplot(212)
+    plt.plot(t, r_ylist, 'g')
+    plt.xlabel('Time (Seconds)')
+    plt.ylabel('Position (???)')
+    plt.title('Y-Position v. Time: Trial ' + str((i+1)))
+    plt.tight_layout()
+
+    plt.show()
+
+    # Plots both positions at the same time to identify overall position
+
+    plt.plot(r_xlist, r_ylist, 'b')
+    plt.xlabel('X-Position')
+    plt.ylabel('Y-Position')
+    plt.title('Overall Position of Particle: Trial ' + str((i+1)))
+
+    plt.show()
 
     # Adding to the list of values as coordinates
     # each row will have a different particle, and inside each row will be positions
@@ -128,6 +170,23 @@ for i in range(len(results_display)):
         results_display[i][1] = expec_msd[i]
         results_display[i][2] = calc_msd[i]
 
+########################################
+# PRINTING RESULTS FROM MSD
+########################################
+
+
+#print('########################################')
+#print('Printing results......')
+#print('########################################')
+
+#for i in range(len(results_display)):
+    #if i == 0:
+        #continue
+    #else: 
+        #print('At time t = ' + format(results_display[i][0], '.2f') +',')
+        #print('Expected MSD was calculated to be: ' + format(results_display[i][1], '.8f'))
+        #print('Calculated MSD was calculated to be: ' + format(results_display[i][2], '.8f'))
+        #print('########################################')
 
 ########################################
 # Saving results into Excel Sheet
@@ -135,13 +194,8 @@ for i in range(len(results_display)):
 
 print('Saving data...')
 df = pd.DataFrame(results_display)
-writer = pd.ExcelWriter('./MSD Results/msd_100.xlsx', engine='xlsxwriter')
+writer = pd.ExcelWriter('../MSD Results/msd_10.xlsx', engine='xlsxwriter')
 df.to_excel(writer, sheet_name='MSD results', index=False)
 writer.save()
 print('########################################')
 print('Saved.')
-
-plt.loglog(t, expec_msd)
-plt.loglog(t, calc_msd)
-plt.axvline(x = math.log(1/dTheta))
-plt.show()
