@@ -15,11 +15,11 @@ def func_theta(): # differential equation for theta
     return (math.sqrt(2 * dTheta) * np.random.randn())
 
 v0 = 1 # initial velocity
-k = 1 # force constant
+k = 0.6 # force constant
 def funcx_r(theta, posit_x): # differential equation for x-component of position
-    return(v0 * math.cos(theta) + k * math.cos(theta)) 
+    return(v0 * math.cos(theta) + k * math.cos(posit_x)) 
 def funcy_r(theta, posit_y): # differential equation for y-component of position
-    return(v0 * math.sin(theta) + k * math.cos(theta))
+    return(v0 * math.sin(theta) + k * math.cos(posit_y))
 
 # Function for euler formula; will be only used to find the theta 
 #########################################################
@@ -50,10 +50,10 @@ def euler_r(position, t, l1, supp_l, fun):
     for i in range(len(t)):
         l1[i] = position
         temp_theta = supp_l[i]
-        position = position + stepsize * fun(temp_theta)  
+        position = position + stepsize * fun(temp_theta, position)  
 
-n = 10 # number of times that program will iterate
-t = np.linspace(0, 100, 2001)
+n = 3 # number of times that program will iterate
+t = np.linspace(0, 1000, 20001)
 colnum = len(t) # of time points
 all_r = np.empty([n, colnum, 2], dtype = float)
 

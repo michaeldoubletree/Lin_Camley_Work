@@ -7,6 +7,61 @@ import numpy as np
 import pandas as pd
 from scipy.integrate import odeint
 
+class Obstacle: # Creates class of obstacles
+    def __init__(self, radius, spacing, xlim, ylim): 
+        self.radius = radius # radius of obstacle (if circle)
+        self.spacing = spacing # the amount of space between obstacles
+        self.xstart = xlim[0] # x-coordinate where obstacles should start 
+        self.xend = xlim[1] # x-coordinate where obstacles should end 
+        self.ystart = ylim[0] # y-coordinate where obstacles should start 
+        self.yend = ylim[1] # y-coordinate where obstacles should end
+
+
+    def set_centers(self): # sets center of objects
+        x_centers = []
+        y_centers = []
+        temp_xcoord = self.xstart
+        temp_ycoord = self.ystart
+        counter = 0
+        while temp_xcoord <= self.xend:
+            x_centers.append(temp_xcoord)
+            temp_xcoord += self.spacing
+
+        while temp_ycoord <= self.yend:
+            y_centers.append(temp_ycoord)
+            temp_ycoord += self.spacing    
+
+        self.centers = np.empty((2, len(x_centers)*len(y_centers)), float)
+        for i in range(len(x_centers)):
+            for j in range(len(y_centers)):
+                self.centers[0][counter] = x_centers[i]
+                self.centers[1][counter] = y_centers[j]
+                counter += 1
+
+    def plot_centers(self):
+        plt.xlim(self.xstart, self.xend)
+        plt.ylim(self.ystart, self.yend)
+        plt.plot(self.centers[0], self.centers[1], 'go')
+        plt.show()
+    
+    def plot_circles(self):
+        fig, ax = plt.subplots()
+        plt.xlim(self.xstart, self.xend)
+        plt.ylim(self.ystart, self.yend)
+        for i in range(len(self.centers[0])):
+            circle = plt.Circle((self.centers[0][i], self.centers[1][i]), self.radius)
+            ax.add_artist(circle)
+
+    def check_distances(self, x, y):
+        displacement = ((self.centers[0] - x)**2 + (self.centers[1] - y)**2)**0.5
+        print(displacement)
+        condition = np.any(displacement <= self.radius)
+        return condition
+
+        
+
+
+
 # Python Code to find approximation of a ordinary differential equation 
 # using euler method. 
 
@@ -16,10 +71,10 @@ def func_theta(): # differential equation for theta
 
 v0 = 1 # initial velocity
 k = 2 # force constant
-def funcx_r(theta, posit_x): # differential equation for x-component of position
-    return(v0 * math.cos(theta) - k * posit_x) 
-def funcy_r(theta, posit_y): # differential equation for y-component of position
-    return(v0 * math.sin(theta) - k * posit_y)
+def funcx_r(theta): # differential equation for x-component of position
+    return(v0 * math.cos(theta)) 
+def funcy_r(theta): # differential equation for y-component of position
+    return(v0 * math.sin(theta))
       
 # Function for euler formula; will be only used to find the theta 
 #########################################################
@@ -51,13 +106,27 @@ def euler_r(position, t, l1, supp_l, fun):
     for i in range(len(t)):
         l1[i] = position
         temp_theta = supp_l[i]
-        position = position + stepsize * fun(temp_theta, position)  
+        position = position + stepsize * fun(temp_theta)  
 
-n = 10 # number of times that program will iterate
-t = np.linspace(0, 100, 2001)
+n = 3 # number of times that program will iterate
+t = np.linspace(0, 10, 201)
 colnum = len(t) # of time points
 all_r = np.empty([n, colnum, 2], dtype = float)
+obstacle_radius = 0.5
+space = 2
+xlim = [-5, 5]
+ylim = [-5, 5]
 
+a = Obstacle(obstacle_radius, space, xlim, ylim)
+a.set_centers()
+a.plot_centers()
+a.plot_circles()
+plt.plot(1.0,1.5, 'go')
+plt.show()
+print(a.check_distances(1.0, 1.5))
+
+
+'''
 for i in range(0, n):
     #########################################################
     # FINDING THETAS #
@@ -71,6 +140,10 @@ for i in range(0, n):
     #########################################################
     # FINDING POSITION #
     #########################################################
+
+    # sets up obstacle course
+    obstacles = Obstacle(obstacle_radius, space, xlim, ylim)
+    obstacles.set_centers()
 
     r_x0 = math.cos(theta0) # initial x-coordinate of position
     r_y0 = math.sin(theta0) # initial y-coordinate of position
@@ -113,6 +186,7 @@ for i in range(0, n):
 
     # Plots both positions at the same time to identify overall position
 
+
     plt.plot(all_r[i,:,0], all_r[i,:,1], 'b')
     plt.xlabel('X-Position')
     plt.ylabel('Y-Position')
@@ -147,3 +221,4 @@ for i in range(0, n):
     plt.ylabel('Frequency')
     plt.title('Overall Position Frequencies: Trial ' + str((i+1)))
     plt.show()
+'''
