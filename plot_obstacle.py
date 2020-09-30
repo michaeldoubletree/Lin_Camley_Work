@@ -52,14 +52,35 @@ class Obstacle: # Creates class of obstacles
             circle = plt.Circle((self.centers[0][i], self.centers[1][i]), self.radius)
             ax.add_artist(circle)
 
-    def check_distances(self, x, y):
+    def check_distances(self, x, y): # checks if a given point is touching/inside a circle
         displacement = ((self.centers[0] - x)**2 + (self.centers[1] - y)**2)**0.5
-        print(displacement)
         condition = np.any(displacement <= self.radius)
         return condition
 
-        
+    def get_normal(self, x, y): # gets normal vector from x and y coordinate of circle
+        displacement = ((self.centers[0] - x)**2 + (self.centers[1] - y)**2)**0.5
+        coordinate = np.where(displacement <= self.radius)[0]
+        x_circle = self.centers[0][coordinate][0]
+        y_circle = self.centers[1][coordinate][0]
+        xdiff = x - x_circle
+        ydiff = y - y_circle
+        r_length = math.sqrt(xdiff**2 + ydiff**2)
+        normal = np.array([xdiff/r_length, ydiff/r_length])
+        return normal
 
+    def check_initial(self, r): #makes sure initial position is not in a circle and repositions accordingly
+        displacement = ((self.centers[0] - r[0])**2 + (self.centers[1] - r[1])**2)**0.5
+        if np.any(displacement <= self.radius):
+            coordinate = np.where(displacement <= self.radius)[0]
+            x_circle = self.centers[0][coordinate][0]
+            y_circle = self.centers[1][coordinate][0]
+            angle = 2 * math.pi * np.random.randn()
+            x_circle = self.radius * math.cos(angle) + x_circle
+            y_circle = self.radius * math.sin(angle) + y_circle
+            r = np.array([x_circle, y_circle])
+            return r
+        else:
+            return r
 
 
 # Python Code to find approximation of a ordinary differential equation 
@@ -71,10 +92,21 @@ def func_theta(): # differential equation for theta
 
 v0 = 1 # initial velocity
 k = 2 # force constant
-def funcx_r(theta): # differential equation for x-component of position
-    return(v0 * math.cos(theta)) 
-def funcy_r(theta): # differential equation for y-component of position
-    return(v0 * math.sin(theta))
+def funcx_r(theta, x, y, obst): # differential equation for x-component of position
+    if obst.check_distances(x, y):
+        n = obst.get_normal(x, y)
+        p = np.array([math.cos(theta), math.sin(theta)])
+        return (v0 * math.cos(theta) + -v0 * (np.sum(n*p)) * n[0])
+    else:
+        return (v0 * math.cos(theta))
+
+def funcy_r(theta, x, y, obst): # differential equation for y-component of position
+    if obst.check_distances(x, y):    
+        n = obst.get_normal(x, y)
+        p = np.array([math.cos(theta), math.sin(theta)])
+        return (v0 * math.sin(theta) + -v0 * (np.sum(n*p)) * n[1])
+    else:
+        return (v0 * math.sin(theta))
       
 # Function for euler formula; will be only used to find the theta 
 #########################################################
@@ -99,34 +131,27 @@ def euler_theta(theta, t, l1, fun):
 # function, supp_l is the supplemental list of thetas that is provided to find the
 # positions
 
-def euler_r(position, t, l1, supp_l, fun): 
+
+def euler_r(position, t, l1, supp_l, fun1, fun2, obst): 
     # Iterating till the point at which we 
     # need approximation 
     stepsize = t[1] - t[0]
     for i in range(len(t)):
-        l1[i] = position
+        l1[i][0] = position[0]
+        l1[i][1] = position[1]
         temp_theta = supp_l[i]
-        position = position + stepsize * fun(temp_theta)  
+        position[0] = position[0] + stepsize * fun1(temp_theta, position[0], position[1], obst)
+        position[1] = position[1] + stepsize * fun2(temp_theta, position[0], position[1], obst)    
 
 n = 3 # number of times that program will iterate
-t = np.linspace(0, 10, 201)
+t = np.linspace(0, 100, 2001)
 colnum = len(t) # of time points
 all_r = np.empty([n, colnum, 2], dtype = float)
 obstacle_radius = 0.5
-space = 2
+space = 1 # space between circle centers
 xlim = [-5, 5]
 ylim = [-5, 5]
 
-a = Obstacle(obstacle_radius, space, xlim, ylim)
-a.set_centers()
-a.plot_centers()
-a.plot_circles()
-plt.plot(1.0,1.5, 'go')
-plt.show()
-print(a.check_distances(1.0, 1.5))
-
-
-'''
 for i in range(0, n):
     #########################################################
     # FINDING THETAS #
@@ -145,11 +170,9 @@ for i in range(0, n):
     obstacles = Obstacle(obstacle_radius, space, xlim, ylim)
     obstacles.set_centers()
 
-    r_x0 = math.cos(theta0) # initial x-coordinate of position
-    r_y0 = math.sin(theta0) # initial y-coordinate of position
+    r_0 = obstacles.check_initial(np.array([math.cos(theta0), math.sin(theta0)]))
 
-    euler_r(r_x0, t, all_r[i,:,0], theta_list, funcx_r) # x-coordinates
-    euler_r(r_y0, t, all_r[i,:,1], theta_list, funcy_r) # y-coordinates
+    euler_r(r_0, t, all_r[i,:,:], theta_list, funcx_r, funcy_r, obstacles)
 
     #########################################################
     # PLOT RESULTS #
@@ -186,7 +209,8 @@ for i in range(0, n):
 
     # Plots both positions at the same time to identify overall position
 
-
+    obstacles.plot_circles()
+    plt.axis('equal')
     plt.plot(all_r[i,:,0], all_r[i,:,1], 'b')
     plt.xlabel('X-Position')
     plt.ylabel('Y-Position')
@@ -194,31 +218,7 @@ for i in range(0, n):
 
     plt.show()
     
-    # Turns the Positions to Histograms
-
-    plt.figure()
-
-    plt.subplot(211)
-    plt.hist(all_r[i,:,0], edgecolor = 'black', linewidth = 1)
-    plt.xlabel('X-Position')
-    plt.ylabel('Frequency')
-    plt.title('X-Position Frequencies: Trial ' + str((i+1)))
-
-    plt.subplot(212)
-    plt.hist(all_r[i,:,1], edgecolor = 'black', linewidth = 1)
-    plt.xlabel('Y-Position')
-    plt.ylabel('Frequency')
-    plt.title('Y-Position Frequencies: Trial ' + str((i+1)))
-
-    plt.tight_layout()
-    plt.show()
-
-    # Histogram of overall position
-    plt.figure()
-    r_overall = np.sqrt(all_r[i,:,0]**2 + all_r[i,:,1]**2)
-    plt.hist(r_overall, edgecolor = 'black', linewidth = 1)
-    plt.xlabel('Overall Distance from Origin')
-    plt.ylabel('Frequency')
-    plt.title('Overall Position Frequencies: Trial ' + str((i+1)))
-    plt.show()
-'''
+# QUestions: 
+# Tau?
+# incorporation of more forces? 
+# 
