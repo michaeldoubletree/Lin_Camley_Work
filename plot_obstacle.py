@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt # imports appropriate plotting package
 import math
 import numpy as np
 import pandas as pd
-from scipy.integrate import odeint
+import itertools
 
 class Obstacle: # Creates class of obstacles
     def __init__(self, radius, spacing, xlim, ylim): 
@@ -18,25 +18,51 @@ class Obstacle: # Creates class of obstacles
 
 
     def set_centers(self): # sets center of objects
-        x_centers = []
-        y_centers = []
+        self.x_centers = []
+        self.y_centers = []
         temp_xcoord = self.xstart
         temp_ycoord = self.ystart
         counter = 0
         while temp_xcoord <= self.xend:
-            x_centers.append(temp_xcoord)
+            self.x_centers.append(temp_xcoord)
             temp_xcoord += self.spacing
 
         while temp_ycoord <= self.yend:
-            y_centers.append(temp_ycoord)
+            self.y_centers.append(temp_ycoord)
             temp_ycoord += self.spacing    
 
-        self.centers = np.empty((2, len(x_centers)*len(y_centers)), float)
-        for i in range(len(x_centers)):
-            for j in range(len(y_centers)):
-                self.centers[0][counter] = x_centers[i]
-                self.centers[1][counter] = y_centers[j]
-                counter += 1
+        #self.centers = np.empty((2, len(self.x_centers)*len(self.y_centers)), float)
+        #for i in range(len(self.x_centers)):
+            #for j in range(len(self.y_centers)):
+                #self.centers[0][counter] = self.x_centers[i]
+                #self.centers[1][counter] = self.y_centers[j]
+                #counter += 1
+        #self.centers = list(itertools.permutations(self.x_centers, r = 2))
+        temp = itertools.product(self.x_centers, self.y_centers)
+        self.centers = np.transpose(np.array(list(temp)))
+    
+    def focus_range(self, x, y):
+        i = np.searchsorted(self.x_centers, x)
+        j = np.searchsorted(self.y_centers, y)
+        '''if (i-1) < 0:
+            interest_x = np.linspace(self.x_centers[i], self.x_centers[i+1], 2)
+        else:
+            if (i+1) >= len(self.x_centers):
+                interest_x = np.linspace(self.x_centers[i-1], self.x_centers[i], 2)
+            else:
+                interest_x = np.linspace(self.x_centers[i-1], self.x_centers[i+1], 3)'''
+        interest_x = np.linspace(self.x_centers[i-1], self.x_centers[i+1], 3)
+        interest_y = np.linspace(self.y_centers[j-1], self.y_centers[j+1], 3)
+        '''if (j-1) < 0:
+            interest_y = np.linspace(self.y_centers[j], self.y_centers[j+1], 2)
+        else:
+            if (j+1) >= len(self.y_centers):
+                interest_y = np.linspace(self.y_centers[j-1], self.y_centers[j], 2)
+            else:
+                interest_y = np.linspace(self.y_centers[j-1], self.y_centers[j+1], 3)'''
+        temp = itertools.product(interest_x, interest_y)
+        interest_centers = np.transpose(np.array(list(temp)))
+        return interest_centers
 
     def plot_centers(self):
         plt.xlim(self.xstart, self.xend)
@@ -53,15 +79,17 @@ class Obstacle: # Creates class of obstacles
             ax.add_artist(circle)
 
     def check_distances(self, x, y): # checks if a given point is touching/inside a circle
-        displacement = ((self.centers[0] - x)**2 + (self.centers[1] - y)**2)**0.5
+        close = self.focus_range(x, y)
+        displacement = ((close[0] - x)**2 + (close[1] - y)**2)**0.5
         condition = np.any(displacement <= self.radius)
         return condition
 
     def get_normal(self, x, y): # gets normal vector from x and y coordinate of circle
-        displacement = ((self.centers[0] - x)**2 + (self.centers[1] - y)**2)**0.5
+        close = self.focus_range(x, y)
+        displacement = ((close[0] - x)**2 + (close[1] - y)**2)**0.5
         coordinate = np.where(displacement <= self.radius)[0]
-        x_circle = self.centers[0][coordinate][0]
-        y_circle = self.centers[1][coordinate][0]
+        x_circle = close[0][coordinate][0]
+        y_circle = close[1][coordinate][0]
         xdiff = x - x_circle
         ydiff = y - y_circle
         r_length = math.sqrt(xdiff**2 + ydiff**2)
@@ -69,7 +97,8 @@ class Obstacle: # Creates class of obstacles
         return normal
 
     def check_initial(self, r): #makes sure initial position is not in a circle and repositions accordingly
-        displacement = ((self.centers[0] - r[0])**2 + (self.centers[1] - r[1])**2)**0.5
+        close = self.focus_range(r[0], r[1])
+        displacement = ((close[0] - r[0])**2 + (close[1] - r[1])**2)**0.5
         if np.any(displacement <= self.radius):
             coordinate = np.where(displacement <= self.radius)[0]
             x_circle = self.centers[0][coordinate][0]
@@ -92,21 +121,17 @@ def func_theta(): # differential equation for theta
 
 v0 = 1 # initial velocity
 k = 2 # force constant
-def funcx_r(theta, x, y, obst): # differential equation for x-component of position
+def func_r(theta, x, y, obst): # differential equation for x-component of position
+    p = np.array([math.cos(theta), math.sin(theta)])
     if obst.check_distances(x, y):
         n = obst.get_normal(x, y)
-        p = np.array([math.cos(theta), math.sin(theta)])
-        return (v0 * math.cos(theta) + -v0 * (np.sum(n*p)) * n[0])
+        if np.sum(n*p) < 0:
+            return (v0 * p + -v0 * (np.sum(n*p)) * n)
+        else:
+            return (v0*p)
     else:
-        return (v0 * math.cos(theta))
+        return (v0 * p)
 
-def funcy_r(theta, x, y, obst): # differential equation for y-component of position
-    if obst.check_distances(x, y):    
-        n = obst.get_normal(x, y)
-        p = np.array([math.cos(theta), math.sin(theta)])
-        return (v0 * math.sin(theta) + -v0 * (np.sum(n*p)) * n[1])
-    else:
-        return (v0 * math.sin(theta))
       
 # Function for euler formula; will be only used to find the theta 
 #########################################################
@@ -132,7 +157,7 @@ def euler_theta(theta, t, l1, fun):
 # positions
 
 
-def euler_r(position, t, l1, supp_l, fun1, fun2, obst): 
+def euler_r(position, t, l1, supp_l, fun1, obst): 
     # Iterating till the point at which we 
     # need approximation 
     stepsize = t[1] - t[0]
@@ -140,17 +165,16 @@ def euler_r(position, t, l1, supp_l, fun1, fun2, obst):
         l1[i][0] = position[0]
         l1[i][1] = position[1]
         temp_theta = supp_l[i]
-        position[0] = position[0] + stepsize * fun1(temp_theta, position[0], position[1], obst)
-        position[1] = position[1] + stepsize * fun2(temp_theta, position[0], position[1], obst)    
+        position = position + stepsize * fun1(temp_theta, position[0], position[1], obst)   
 
 n = 3 # number of times that program will iterate
 t = np.linspace(0, 100, 2001)
 colnum = len(t) # of time points
 all_r = np.empty([n, colnum, 2], dtype = float)
 obstacle_radius = 0.5
-space = 1 # space between circle centers
-xlim = [-5, 5]
-ylim = [-5, 5]
+space = 2 # space between circle centers
+xlim = [-50, 50]
+ylim = [-50, 50]
 
 for i in range(0, n):
     #########################################################
@@ -172,7 +196,7 @@ for i in range(0, n):
 
     r_0 = obstacles.check_initial(np.array([math.cos(theta0), math.sin(theta0)]))
 
-    euler_r(r_0, t, all_r[i,:,:], theta_list, funcx_r, funcy_r, obstacles)
+    euler_r(r_0, t, all_r[i,:,:], theta_list, func_r, obstacles)
 
     #########################################################
     # PLOT RESULTS #
@@ -217,8 +241,26 @@ for i in range(0, n):
     plt.title('Overall Position of Particle: Trial ' + str((i+1)))
 
     plt.show()
+
+calc_msd = np.empty(colnum)
+for j in np.arange(np.size(all_r[0,:,0])):
+    diffx = all_r[:,j,0] - all_r[:,0,0]
+    diffy = all_r[:,j,1] - all_r[:,0,1]
+    temp = diffx**2 + diffy**2
+    temp /= np.size(all_r[:,0,0])
+    calc_msd[j] = temp.sum()
+
+plt.loglog(t, calc_msd)
+plt.xlabel('Time (s)')
+plt.ylabel('Mean Squared Displacement')
+plt.title('MSD v. Time')
+plt.show()
+
     
 # QUestions: 
 # Tau?
 # incorporation of more forces? 
-# 
+# edit the Obstacle class? spacing between obstacles
+# Fokker Planck equation - tool for describing eventual distribution
+# takes model and gives a PDE model; prob distribution of eventual positions and velocities
+
