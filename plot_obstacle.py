@@ -22,7 +22,7 @@ class Obstacle: # Creates class of obstacles
         self.y_centers = []
         temp_xcoord = self.xstart
         temp_ycoord = self.ystart
-        counter = 0
+        #counter = 0
         while temp_xcoord <= self.xend:
             self.x_centers.append(temp_xcoord)
             temp_xcoord += self.spacing
@@ -51,8 +51,8 @@ class Obstacle: # Creates class of obstacles
                 interest_x = np.linspace(self.x_centers[i-1], self.x_centers[i], 2)
             else:
                 interest_x = np.linspace(self.x_centers[i-1], self.x_centers[i+1], 3)'''
-        interest_x = np.linspace(self.x_centers[i-1], self.x_centers[i+1], 3)
-        interest_y = np.linspace(self.y_centers[j-1], self.y_centers[j+1], 3)
+        interest_x = np.linspace(self.x_centers[i-1], self.x_centers[i+1], 3) # selects only 3 x's
+        interest_y = np.linspace(self.y_centers[j-1], self.y_centers[j+1], 3) # selects only 3 y's
         '''if (j-1) < 0:
             interest_y = np.linspace(self.y_centers[j], self.y_centers[j+1], 2)
         else:
@@ -168,7 +168,7 @@ def euler_r(position, t, l1, supp_l, fun1, obst):
         position = position + stepsize * fun1(temp_theta, position[0], position[1], obst)   
 
 n = 3 # number of times that program will iterate
-t = np.linspace(0, 100, 2001)
+t = np.linspace(0, 100, 20001)
 colnum = len(t) # of time points
 all_r = np.empty([n, colnum, 2], dtype = float)
 obstacle_radius = 0.5
@@ -254,9 +254,11 @@ plt.loglog(t, calc_msd)
 plt.xlabel('Time (s)')
 plt.ylabel('Mean Squared Displacement')
 plt.title('MSD v. Time')
-plt.show()
 
-    
+
+#msd_fit = np.polyfit(t, calc_msd, 1)  # perform linear regression
+#plt.loglog(t, msd_fit[0]*t+msd_fit[1], color='red')
+#plt.show()
 # QUestions: 
 # Tau?
 # incorporation of more forces? 
