@@ -8,108 +8,49 @@ import pandas as pd
 import itertools
 
 class Obstacle: # Creates class of obstacles
-    def __init__(self, radius, spacing, xlim, ylim): 
+    def __init__(self, radius, spacing, x, y): # (self, radius, spacing, xlim, ylim)
         self.radius = radius # radius of obstacle (if circle)
         self.spacing = spacing # the amount of space between obstacles
-        self.xstart = xlim[0] # x-coordinate where obstacles should start 
-        self.xend = xlim[1] # x-coordinate where obstacles should end 
-        self.ystart = ylim[0] # y-coordinate where obstacles should start 
-        self.yend = ylim[1] # y-coordinate where obstacles should end
+        self.xcenter = x
+        self.ycenter = y
 
 
-    def set_centers(self): # sets center of objects
-        self.x_centers = []
-        self.y_centers = []
-        temp_xcoord = self.xstart
-        temp_ycoord = self.ystart
-        #counter = 0
-        while temp_xcoord <= self.xend:
-            self.x_centers.append(temp_xcoord)
-            temp_xcoord += self.spacing
+    def periodic_method(self,x,y):
+        dx = x - self.xcenter
+        dy = y - self.ycenter
+        dx_close = dx - (self.spacing) * np.around(dx/(self.spacing))
+        dy_close = dy - (self.spacing) * np.around(dy/(self.spacing))
+        return [dx_close, dy_close]
 
-        while temp_ycoord <= self.yend:
-            self.y_centers.append(temp_ycoord)
-            temp_ycoord += self.spacing    
-
-        #self.centers = np.empty((2, len(self.x_centers)*len(self.y_centers)), float)
-        #for i in range(len(self.x_centers)):
-            #for j in range(len(self.y_centers)):
-                #self.centers[0][counter] = self.x_centers[i]
-                #self.centers[1][counter] = self.y_centers[j]
-                #counter += 1
-        #self.centers = list(itertools.permutations(self.x_centers, r = 2))
-        temp = itertools.product(self.x_centers, self.y_centers)
-        self.centers = np.transpose(np.array(list(temp)))
-    
-    def focus_range(self, x, y):
-        i = np.searchsorted(self.x_centers, x)
-        j = np.searchsorted(self.y_centers, y)
-        '''if (i-1) < 0:
-            interest_x = np.linspace(self.x_centers[i], self.x_centers[i+1], 2)
-        else:
-            if (i+1) >= len(self.x_centers):
-                interest_x = np.linspace(self.x_centers[i-1], self.x_centers[i], 2)
-            else:
-                interest_x = np.linspace(self.x_centers[i-1], self.x_centers[i+1], 3)'''
-        interest_x = np.linspace(self.x_centers[i-1], self.x_centers[i+1], 3) # selects only 3 x's
-        interest_y = np.linspace(self.y_centers[j-1], self.y_centers[j+1], 3) # selects only 3 y's
-        '''if (j-1) < 0:
-            interest_y = np.linspace(self.y_centers[j], self.y_centers[j+1], 2)
-        else:
-            if (j+1) >= len(self.y_centers):
-                interest_y = np.linspace(self.y_centers[j-1], self.y_centers[j], 2)
-            else:
-                interest_y = np.linspace(self.y_centers[j-1], self.y_centers[j+1], 3)'''
-        temp = itertools.product(interest_x, interest_y)
-        interest_centers = np.transpose(np.array(list(temp)))
-        return interest_centers
-
-    def plot_centers(self):
-        plt.xlim(self.xstart, self.xend)
-        plt.ylim(self.ystart, self.yend)
-        plt.plot(self.centers[0], self.centers[1], 'go')
-        plt.show()
-    
-    def plot_circles(self):
-        fig, ax = plt.subplots()
-        plt.xlim(self.xstart, self.xend)
-        plt.ylim(self.ystart, self.yend)
-        for i in range(len(self.centers[0])):
-            circle = plt.Circle((self.centers[0][i], self.centers[1][i]), self.radius)
-            ax.add_artist(circle)
 
     def check_distances(self, x, y): # checks if a given point is touching/inside a circle
-        close = self.focus_range(x, y)
-        displacement = ((close[0] - x)**2 + (close[1] - y)**2)**0.5
-        condition = np.any(displacement <= self.radius)
+        close = self.periodic_method(x,y)
+        #displacement = ((close[0] - x)**2 + (close[1] - y)**2)**0.5
+        displacement = ((close[0])**2 + (close[1])**2)**0.5
+        #condition = np.any(displacement <= self.radius)
+        condition = (displacement <= self.radius)
         return condition
 
     def get_normal(self, x, y): # gets normal vector from x and y coordinate of circle
-        close = self.focus_range(x, y)
-        displacement = ((close[0] - x)**2 + (close[1] - y)**2)**0.5
-        coordinate = np.where(displacement <= self.radius)[0]
-        x_circle = close[0][coordinate][0]
-        y_circle = close[1][coordinate][0]
-        xdiff = x - x_circle
-        ydiff = y - y_circle
-        r_length = math.sqrt(xdiff**2 + ydiff**2)
-        normal = np.array([xdiff/r_length, ydiff/r_length])
+        close = self.periodic_method(x,y)
+        r_length = math.sqrt(close[0]**2 + close[1]**2)
+        normal = np.array([close[0]/r_length, close[1]/r_length])
         return normal
 
     def check_initial(self, r): #makes sure initial position is not in a circle and repositions accordingly
-        close = self.focus_range(r[0], r[1])
-        displacement = ((close[0] - r[0])**2 + (close[1] - r[1])**2)**0.5
-        if np.any(displacement <= self.radius):
-            coordinate = np.where(displacement <= self.radius)[0]
-            x_circle = self.centers[0][coordinate][0]
-            y_circle = self.centers[1][coordinate][0]
+        close = self.periodic_method(r[0],r[1])
+        displacement = ((close[0])**2 + (close[1])**2)**0.5
+
+        if displacement <= self.radius:
             angle = 2 * math.pi * np.random.randn()
+            x_circle = self.xcenter
+            y_circle = self.ycenter
             x_circle = self.radius * math.cos(angle) + x_circle
             y_circle = self.radius * math.sin(angle) + y_circle
             r = np.array([x_circle, y_circle])
             return r
-        else:
-            return r
+        else: 
+            return r 
 
 
 # Python Code to find approximation of a ordinary differential equation 
@@ -132,7 +73,6 @@ def func_r(theta, x, y, obst): # differential equation for x-component of positi
     else:
         return (v0 * p)
 
-      
 # Function for euler formula; will be only used to find the theta 
 #########################################################
 # t0 is initial time, theta is the angle found through each iteration of function,
@@ -147,6 +87,36 @@ def euler_theta(theta, t, l1, fun):
         l1[i] = theta
         theta = theta + math.sqrt(stepsize) * fun()
 
+def set_obstaclebound(x,y):
+    minx = np.around(np.amin(x))
+    miny = np.around(np.amin(y))
+    maxx = np.around(np.amax(x))
+    maxy = np.around(np.amax(y))
+    xlim = [minx, maxx]
+    ylim = [miny, maxy]
+    return xlim, ylim
+
+def plot_circles(xcenter, ycenter, xlim, ylim,spacing,radius):
+    if (xcenter + xlim[0])%spacing != 0:
+        xlim[0] = xlim[0] + 1
+    if (xcenter + xlim[1])%spacing != 0:
+        xlim[1] = xlim[1] + 1
+    if (ycenter + ylim[0])%spacing != 0:
+        ylim[0] = ylim[0] + 1
+    if (ycenter + ylim[1])%spacing != 0:
+        ylim[1] = ylim[1] + 1
+    x_centers = np.arange(xlim[0],xlim[1],spacing) 
+    y_centers = np.arange(ylim[0],ylim[1],spacing) 
+    
+    temp = itertools.product(list(x_centers), list(y_centers))
+    centers = np.transpose(np.array(list(temp)))
+    
+    fig, ax = plt.subplots()
+    for i in range(len(centers[0])):
+        circle = plt.Circle((centers[0][i], centers[1][i]), radius)
+        ax.add_artist(circle)
+
+        
 
 # Function for euler formula; adjusted to find the position since it requires theta
 #########################################################
@@ -173,8 +143,10 @@ colnum = len(t) # of time points
 all_r = np.empty([n, colnum, 2], dtype = float)
 obstacle_radius = 0.5
 space = 2 # space between circle centers
-xlim = [-50, 50]
-ylim = [-50, 50]
+xcenter = 0
+ycenter = 0 
+#xlim = [-50, 50]
+#ylim = [-50, 50]
 
 for i in range(0, n):
     #########################################################
@@ -191,8 +163,7 @@ for i in range(0, n):
     #########################################################
 
     # sets up obstacle course
-    obstacles = Obstacle(obstacle_radius, space, xlim, ylim)
-    obstacles.set_centers()
+    obstacles = Obstacle(obstacle_radius, space, xcenter, ycenter)
 
     r_0 = obstacles.check_initial(np.array([math.cos(theta0), math.sin(theta0)]))
 
@@ -233,7 +204,9 @@ for i in range(0, n):
 
     # Plots both positions at the same time to identify overall position
 
-    obstacles.plot_circles()
+    xlim, ylim = set_obstaclebound(all_r[i,:,0],all_r[i,:,1])
+    plot_circles(xcenter, ycenter, xlim, ylim, space, obstacle_radius)
+    #obstacles.plot_circles()
     plt.axis('equal')
     plt.plot(all_r[i,:,0], all_r[i,:,1], 'b')
     plt.xlabel('X-Position')
@@ -254,15 +227,4 @@ plt.loglog(t, calc_msd)
 plt.xlabel('Time (s)')
 plt.ylabel('Mean Squared Displacement')
 plt.title('MSD v. Time')
-
-
-#msd_fit = np.polyfit(t, calc_msd, 1)  # perform linear regression
-#plt.loglog(t, msd_fit[0]*t+msd_fit[1], color='red')
-#plt.show()
-# QUestions: 
-# Tau?
-# incorporation of more forces? 
-# edit the Obstacle class? spacing between obstacles
-# Fokker Planck equation - tool for describing eventual distribution
-# takes model and gives a PDE model; prob distribution of eventual positions and velocities
-
+plt.show()
