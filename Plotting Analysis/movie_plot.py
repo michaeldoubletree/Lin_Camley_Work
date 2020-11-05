@@ -113,8 +113,11 @@ def plot_circles(xcenter, ycenter, xlim, ylim,spacing,radius):
     
     fig, ax = plt.subplots()
     for i in range(len(centers[0])):
-        circle = plt.Circle((centers[0][i], centers[1][i]), radius)
+        circle = plt.Circle((centers[0][i], centers[1][i]), radius, alpha=0.5)
         ax.add_artist(circle)
+
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
 
         
 
@@ -138,91 +141,53 @@ def euler_r(position, t, l1, supp_l, fun1, obst):
         position = position + stepsize * fun1(temp_theta, position[0], position[1], obst)   
 
 n = 3 # number of times that program will iterate
-t = np.linspace(0, 100, 20001)
+t = np.linspace(0, 10, 201)
 colnum = len(t) # of time points
-all_r = np.empty([n, colnum, 2], dtype = float)
+all_r = np.empty([colnum, 2], dtype = float)
 obstacle_radius = 0.5
 space = 2 # space between circle centers
 xcenter = 0
 ycenter = 0 
 
-for i in range(0, n):
-    #########################################################
-    # FINDING THETAS #
-    #########################################################
+theta0 = 2 * math.pi * np.random.randn() # initial theta; consider adding 2 pi times randn
+theta_list = np.empty(colnum) # list of all thetas
 
-    theta0 = 2 * math.pi * np.random.randn() # initial theta; consider adding 2 pi times randn
-    theta_list = np.empty(colnum) # list of all thetas
+euler_theta(theta0, t, theta_list, func_theta) # stored in theta_list
 
-    euler_theta(theta0, t, theta_list, func_theta) # stored in theta_list
+#########################################################
+# FINDING POSITION #
+#########################################################
 
-    #########################################################
-    # FINDING POSITION #
-    #########################################################
-
-    # sets up obstacle course
-    obstacles = Obstacle(obstacle_radius, space, xcenter, ycenter)
-
-    r_0 = obstacles.check_initial(np.array([math.cos(theta0), math.sin(theta0)]))
-
-    euler_r(r_0, t, all_r[i,:,:], theta_list, func_r, obstacles)
-
-    #########################################################
-    # PLOT RESULTS #
-    #########################################################
+# sets up obstacle course
+obstacles = Obstacle(obstacle_radius, space, xcenter, ycenter)
+r_0 = obstacles.check_initial(np.array([math.cos(theta0), math.sin(theta0)]))
+euler_r(r_0, t, all_r, theta_list, func_r, obstacles)
+xlim, ylim = set_obstaclebound(all_r[:,0],all_r[:,1])
 
 
-    # Plots Theta values
+#########################################################
+# PLOT RESULTS #
+#########################################################
 
-    plt.plot(t, theta_list, 'g')
-    plt.xlabel('Time (Seconds)')
-    plt.ylabel('Angle (Radians)')
-    plt.title('Angle v. Time: Trial ' + str((i+1)))
 
-    plt.show()
-
-    # Plots individual x and y positions with respect to time
-    plt.figure()
-
-    plt.subplot(211)
-    plt.plot(t, all_r[i,:,0], 'g')
-    plt.xlabel('Time (Seconds)')
-    plt.ylabel('Position (???)')
-    plt.title('X-Position v. Time: Trial ' + str((i+1)))
-    plt.tight_layout()
-
-    plt.subplot(212)
-    plt.plot(t, all_r[i,:,1], 'g')
-    plt.xlabel('Time (Seconds)')
-    plt.ylabel('Position (???)')
-    plt.title('Y-Position v. Time: Trial ' + str((i+1)))
-    plt.tight_layout()
-
-    plt.show()
-
-    # Plots both positions at the same time to identify overall position
-
-    xlim, ylim = set_obstaclebound(all_r[i,:,0],all_r[i,:,1])
+for i in range(len(all_r[:,0])-1):
     plot_circles(xcenter, ycenter, xlim, ylim, space, obstacle_radius)
-    #obstacles.plot_circles()
     plt.axis('equal')
-    plt.plot(all_r[i,:,0], all_r[i,:,1], 'b')
+    plt.plot(all_r[:i+1,0], all_r[:i+1,1], 'b')
+    plt.quiver(all_r[i,0],all_r[i,1], math.cos(theta_list[i]), math.sin(theta_list[i]), color = 'g', label = 'Polarity')
+    disp = math.sqrt((all_r[i,0] - all_r[i-1,0])**2 + (all_r[i,1] - all_r[i-1,1])**2)
+    xangle = (all_r[i+1,0] - all_r[i,0])/disp
+    yangle = (all_r[i+1,1] - all_r[i,1])/disp
+    plt.quiver(all_r[i,0],all_r[i,1], xangle, yangle, scale = 25, color = 'r', label = 'velocity')
+    graphxlim = [xlim[0]-space, xlim[1]+space]
+    graphylim = [ylim[0]-1.5*space, ylim[1]+1.5*space]
+    plt.xlim(graphxlim)
+    plt.ylim(graphylim)
     plt.xlabel('X-Position')
     plt.ylabel('Y-Position')
-    plt.title('Overall Position of Particle: Trial ' + str((i+1)))
+    plt.title('Overall Position of Particle')
+    plt.legend()
+    plt.savefig('Plotting Analysis/movie/img%d.png'% i)
+    plt.close()
 
-    plt.show()
 
-calc_msd = np.empty(colnum)
-for j in np.arange(np.size(all_r[0,:,0])):
-    diffx = all_r[:,j,0] - all_r[:,0,0]
-    diffy = all_r[:,j,1] - all_r[:,0,1]
-    temp = diffx**2 + diffy**2
-    temp /= np.size(all_r[:,0,0])
-    calc_msd[j] = temp.sum()
-
-plt.loglog(t, calc_msd)
-plt.xlabel('Time (s)')
-plt.ylabel('Mean Squared Displacement')
-plt.title('MSD v. Time')
-plt.show()
