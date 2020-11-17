@@ -57,8 +57,10 @@ class Obstacle: # Creates class of obstacles
 # using euler method. 
 
 dTheta = 1 # diffusion coefficient
+tau = 2 # 
 def func_theta(): # differential equation for theta
     return (math.sqrt(2 * dTheta) * np.random.randn())
+    #return 1/tau * math.asin() + np.random.randn()
 
 v0 = 1 # initial velocity
 k = 2 # force constant
@@ -96,7 +98,7 @@ def set_obstaclebound(x,y):
     ylim = [miny, maxy]
     return xlim, ylim
 
-def plot_circles(xcenter, ycenter, xlim, ylim,spacing,radius):
+def plot_circles(xcenter, ycenter, xlim, ylim,spacing,radius,graphx,graphy):
     if (xcenter + xlim[0])%spacing != 0:
         xlim[0] = xlim[0] + 1
     if (xcenter + xlim[1])%spacing != 0:
@@ -116,8 +118,8 @@ def plot_circles(xcenter, ycenter, xlim, ylim,spacing,radius):
         circle = plt.Circle((centers[0][i], centers[1][i]), radius, alpha=0.5)
         ax.add_artist(circle)
 
-    ax.set_xlim(xlim)
-    ax.set_ylim(ylim)
+    ax.set_xlim(graphx)
+    ax.set_ylim(graphy)
 
         
 
@@ -138,12 +140,19 @@ def euler_r(position, t, l1, supp_l, fun1, obst):
         l1[i][0] = position[0]
         l1[i][1] = position[1]
         temp_theta = supp_l[i]
-        position = position + stepsize * fun1(temp_theta, position[0], position[1], obst)   
+        position = position + stepsize * fun1(temp_theta, position[0], position[1], obst)
+        if obst.check_distances(l1[i][0], l1[i][1]):
+            disp = math.sqrt((position[0] - l1[i][0])**2 + (position[1] - l1[i][1])**2)
+            xangle = (position[0] - l1[i][0])/disp
+            yangle = (position[1] - l1[i][1])/disp
+            l1[i][2] = math.atan2(yangle,xangle)
+        else:
+            l1[i][2] = supp_l[i]   
 
 n = 3 # number of times that program will iterate
 t = np.linspace(0, 10, 201)
 colnum = len(t) # of time points
-all_r = np.empty([colnum, 2], dtype = float)
+all_r = np.empty([colnum, 3], dtype = float)
 obstacle_radius = 0.5
 space = 2 # space between circle centers
 xcenter = 0
@@ -163,26 +172,33 @@ obstacles = Obstacle(obstacle_radius, space, xcenter, ycenter)
 r_0 = obstacles.check_initial(np.array([math.cos(theta0), math.sin(theta0)]))
 euler_r(r_0, t, all_r, theta_list, func_r, obstacles)
 xlim, ylim = set_obstaclebound(all_r[:,0],all_r[:,1])
+graphx = [np.amin(all_r[:,0])-0.5, np.amax(all_r[:,0]+0.5)]
+graphy = [np.amin(all_r[:,1])-0.5, np.amax(all_r[:,1]+0.5)]
 
+print(graphx)
+print(graphy)
 
+#plot_circles(xcenter, ycenter, xlim, ylim, space, obstacle_radius)
+#plt.axis('equal')
+#plt.plot(all_r[:,0], all_r[:,1], 'b')
+#plt.xlabel('X-Position')
+#plt.ylabel('Y-Position')
+#plt.title('Overall Position of Particle')
+#plt.show()
+#plt.close()
 #########################################################
 # PLOT RESULTS #
 #########################################################
 
 
 for i in range(len(all_r[:,0])-1):
-    plot_circles(xcenter, ycenter, xlim, ylim, space, obstacle_radius)
+    plot_circles(xcenter, ycenter, xlim, ylim, space, obstacle_radius,graphx,graphy)
     plt.axis('equal')
-    plt.plot(all_r[:i+1,0], all_r[:i+1,1], 'b')
+    plt.plot(all_r[0:i+1,0], all_r[0:i+1,1], 'b')
     plt.quiver(all_r[i,0],all_r[i,1], math.cos(theta_list[i]), math.sin(theta_list[i]), color = 'g', label = 'Polarity')
-    disp = math.sqrt((all_r[i,0] - all_r[i-1,0])**2 + (all_r[i,1] - all_r[i-1,1])**2)
-    xangle = (all_r[i+1,0] - all_r[i,0])/disp
-    yangle = (all_r[i+1,1] - all_r[i,1])/disp
-    plt.quiver(all_r[i,0],all_r[i,1], xangle, yangle, scale = 25, color = 'r', label = 'velocity')
-    graphxlim = [xlim[0]-space, xlim[1]+space]
-    graphylim = [ylim[0]-1.5*space, ylim[1]+1.5*space]
-    plt.xlim(graphxlim)
-    plt.ylim(graphylim)
+    plt.quiver(all_r[i,0],all_r[i,1], math.cos(all_r[i,2]), math.sin(all_r[i,2]), scale = 25, color = 'r', label = 'velocity')
+    plt.xlim(graphx)
+    plt.ylim(graphy)
     plt.xlabel('X-Position')
     plt.ylabel('Y-Position')
     plt.title('Overall Position of Particle')
@@ -190,4 +206,6 @@ for i in range(len(all_r[:,0])-1):
     plt.savefig('Plotting Analysis/movie/img%d.png'% i)
     plt.close()
 
-
+# To Create movie, go into terminal and type
+# cd Documents/GitHub/Lin_Camley_Work/Plotting\ Analysis/movie
+# ffmpeg -start_number 0 -i 'img%d.png' -c:v libx264 -pix_fmt yuv420p out.mp4
