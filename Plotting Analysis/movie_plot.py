@@ -117,9 +117,11 @@ def plot_circles(xcenter, ycenter, xlim, ylim,spacing,radius,graphx,graphy):
     for i in range(len(centers[0])):
         circle = plt.Circle((centers[0][i], centers[1][i]), radius, alpha=0.5)
         ax.add_artist(circle)
+        ax.set_xlim(graphx)
+        ax.set_ylim(graphy)
 
-    ax.set_xlim(graphx)
-    ax.set_ylim(graphy)
+    
+    
 
         
 
@@ -172,8 +174,8 @@ obstacles = Obstacle(obstacle_radius, space, xcenter, ycenter)
 r_0 = obstacles.check_initial(np.array([math.cos(theta0), math.sin(theta0)]))
 euler_r(r_0, t, all_r, theta_list, func_r, obstacles)
 xlim, ylim = set_obstaclebound(all_r[:,0],all_r[:,1])
-graphx = [np.amin(all_r[:,0])-0.5, np.amax(all_r[:,0]+0.5)]
-graphy = [np.amin(all_r[:,1])-0.5, np.amax(all_r[:,1]+0.5)]
+graphx = [np.amin(all_r[:,0])-1.5, np.amax(all_r[:,0]+1.5)]
+graphy = [np.amin(all_r[:,1])-1.5, np.amax(all_r[:,1]+1.5)]
 
 print(graphx)
 print(graphy)
