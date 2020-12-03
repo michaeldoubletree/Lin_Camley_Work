@@ -57,14 +57,17 @@ class Obstacle: # Creates class of obstacles
 # using euler method. 
 
 dTheta = 1 # diffusion coefficient
-tau = 2 # 
-def func_theta(): # differential equation for theta
-    return (math.sqrt(2 * dTheta) * np.random.randn())
-    #return 1/tau * math.asin() + np.random.randn()
+tau = 0.02 # 
+
 
 v0 = 1 # initial velocity
 k = 2 # force constant
-def func_r(theta, x, y, obst): # differential equation for x-component of position
+def func_theta(theta): # differential equation for theta
+    #return (math.sqrt(2 * dTheta) * np.random.randn())
+    p = np.array([math.cos(theta), math.sin(theta)])
+    return (1/tau * math.asin(p[0] * p[1]*v0 - p[1] * p[0]*v0) + np.random.randn())
+
+def func_r(theta, x, y, obst): # differential equation for position
     p = np.array([math.cos(theta), math.sin(theta)])
     if obst.check_distances(x, y):
         n = obst.get_normal(x, y)
@@ -74,6 +77,7 @@ def func_r(theta, x, y, obst): # differential equation for x-component of positi
             return (v0*p)
     else:
         return (v0 * p)
+
 
 # Function for euler formula; will be only used to find the theta 
 #########################################################
@@ -107,8 +111,8 @@ def plot_circles(xcenter, ycenter, xlim, ylim,spacing,radius,graphx,graphy):
         ylim[0] = ylim[0] + 1
     if (ycenter + ylim[1])%spacing != 0:
         ylim[1] = ylim[1] + 1
-    x_centers = np.arange(xlim[0],xlim[1],spacing) 
-    y_centers = np.arange(ylim[0],ylim[1],spacing) 
+    x_centers = np.arange(xlim[0]-spacing,xlim[1]+spacing,spacing) 
+    y_centers = np.arange(ylim[0]-spacing,ylim[1]+spacing,spacing) 
     
     temp = itertools.product(list(x_centers), list(y_centers))
     centers = np.transpose(np.array(list(temp)))
@@ -151,10 +155,29 @@ def euler_r(position, t, l1, supp_l, fun1, obst):
         else:
             l1[i][2] = supp_l[i]   
 
+def euler_rtheta(position, t, l1, supp_l, func_r, obst): 
+    # Does Euler for both angle and position
+    stepsize = t[1] - t[0]
+    for i in range(len(t)):
+        l1[i][0] = position[0] # x coordinate of position
+        l1[i][1] = position[1] # y coordinate of position
+        temp_theta = supp_l[i] # stores theta point at time index i
+        if i < len(t)-1:
+            supp_l[i+1] = temp_theta + math.sqrt(stepsize) * func_theta(temp_theta)
+        position = position + stepsize * func_r(temp_theta, position[0], position[1], obst)
+        
+        if obst.check_distances(l1[i][0], l1[i][1]):
+            disp = math.sqrt((position[0] - l1[i][0])**2 + (position[1] - l1[i][1])**2)
+            xangle = (position[0] - l1[i][0])/disp
+            yangle = (position[1] - l1[i][1])/disp
+            l1[i][2] = math.atan2(yangle,xangle) # stores direction angle
+        else:
+            l1[i][2] = supp_l[i]  # stores polarity angle (not touching obstacle)
+
 n = 3 # number of times that program will iterate
 t = np.linspace(0, 10, 201)
 colnum = len(t) # of time points
-all_r = np.empty([colnum, 3], dtype = float)
+all_r = np.empty([colnum, 3], dtype = float) # 1st column-  x coordinate, 2nd column-  y coordinate, 3rd column-  velocity angle
 obstacle_radius = 0.5
 space = 2 # space between circle centers
 xcenter = 0
@@ -163,7 +186,7 @@ ycenter = 0
 theta0 = 2 * math.pi * np.random.randn() # initial theta; consider adding 2 pi times randn
 theta_list = np.empty(colnum) # list of all thetas
 
-euler_theta(theta0, t, theta_list, func_theta) # stored in theta_list
+#euler_theta(theta0, t, theta_list, func_theta) # stored in theta_list
 
 #########################################################
 # FINDING POSITION #
@@ -172,7 +195,7 @@ euler_theta(theta0, t, theta_list, func_theta) # stored in theta_list
 # sets up obstacle course
 obstacles = Obstacle(obstacle_radius, space, xcenter, ycenter)
 r_0 = obstacles.check_initial(np.array([math.cos(theta0), math.sin(theta0)]))
-euler_r(r_0, t, all_r, theta_list, func_r, obstacles)
+euler_rtheta(r_0, t, all_r, theta_list, func_r, obstacles)
 xlim, ylim = set_obstaclebound(all_r[:,0],all_r[:,1])
 graphx = [np.amin(all_r[:,0])-1.5, np.amax(all_r[:,0]+1.5)]
 graphy = [np.amin(all_r[:,1])-1.5, np.amax(all_r[:,1]+1.5)]
@@ -180,14 +203,14 @@ graphy = [np.amin(all_r[:,1])-1.5, np.amax(all_r[:,1]+1.5)]
 print(graphx)
 print(graphy)
 
-#plot_circles(xcenter, ycenter, xlim, ylim, space, obstacle_radius)
-#plt.axis('equal')
-#plt.plot(all_r[:,0], all_r[:,1], 'b')
-#plt.xlabel('X-Position')
-#plt.ylabel('Y-Position')
-#plt.title('Overall Position of Particle')
-#plt.show()
-#plt.close()
+plot_circles(xcenter, ycenter, xlim, ylim, space, obstacle_radius, graphx, graphy)
+plt.axis('equal')
+plt.plot(all_r[:,0], all_r[:,1], 'b')
+plt.xlabel('X-Position')
+plt.ylabel('Y-Position')
+plt.title('Overall Position of Particle')
+plt.show()
+plt.close()
 #########################################################
 # PLOT RESULTS #
 #########################################################
@@ -207,6 +230,16 @@ for i in range(len(all_r[:,0])-1):
     plt.legend()
     plt.savefig('Plotting Analysis/movie/img%d.png'% i)
     plt.close()
+
+calc_msd = np.empty(colnum)
+diffx = all_r[:,0] - all_r[0,0]
+diffy = all_r[:,1] - all_r[0,1]
+calc_msd = diffx**2 + diffy**2
+plt.loglog(t, calc_msd)
+plt.xlabel('Time (s)')
+plt.ylabel('Mean Squared Displacement')
+plt.title('MSD v. Time')
+plt.show()
 
 # To Create movie, go into terminal and type
 # cd Documents/GitHub/Lin_Camley_Work/Plotting\ Analysis/movie
